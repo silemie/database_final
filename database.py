@@ -89,40 +89,60 @@ class database:
     def select(self, condition):
         relops = ['=', '!=', '>', '>=', '<', '<=']
         arithops = ['+', '-', '*', '/']
-        logical_words = ['and', 'or']
+
         result = []
         start_time = time.time()
-        for logical_word in logical_words:
-            if condition.find(logical_word) != -1:
-                conditions = condition.split(logical_word)
+        if condition.find('or') != -1:
+            conditions = condition.split('or')
+            for c in conditions:
+                c = c.replace("(","").strip()
+                c = c.replace(")", "").strip()
+                for relop in relops:
+                    if c.find(relop) != -1:
+                        exp_left = c.split(relop)[0].strip()
+                        exp_right = c.split(relop)[1].strip()
+                        if exp_left.isnumeric:
+                            col_index = self.header.index(exp_left)
+                            exp = exp_right
+                        else:
+                            col_index = self.header.index(exp_right)
+                            exp = exp_left
+                        for data in self.data:
+                            if eval(str(data[col_index]) + relop + exp):
+                                result.append(data)
+        if condition.find('and') != -1:
+            conditions = condition.split('and')
+            for data in self.data:
                 for c in conditions:
+                    c = c.replace("(", "").strip()
+                    c = c.replace(")", "").strip()
                     for relop in relops:
                         if c.find(relop) != -1:
-                            exp_left = c.split(relop)[0]
-                            exp_right = c.split(relop)[1]
+                            exp_left = c.split(relop)[0].strip()
+                            exp_right = c.split(relop)[1].strip()
                             if exp_left.isnumeric:
-                                col_index = self.header.index(exp_right)
+                                col_index = self.header.index(exp_left)
                                 exp = exp_right
                             else:
-                                col_index = self.header.index(exp_left)
+                                col_index = self.header.index(exp_right)
                                 exp = exp_left
-                            for i in range(col_index, len(self.data) + 1):
-                                if eval(self.data[i] + relop + exp):
-                                    result.append(self.data[i - col_index:i + len(self.header)])
+                            if eval(str(data[col_index]) + relop + exp):
+                                result.append(data)
         self.time_record.append(time.time() - start_time)
         return result
 
 if __name__ == "__main__":
 
-    input_file = sys.argv[1]
-    mode = sys.argv[2]
+    input_file = "sales1.txt"
+    #mode = sys.argv[2]
     # mode = 'H' 
     # mode = 'T'
 
     output_file = "test.txt"
 
-    db = database(mode)
+    db = database('H')
     db.inputfromfile(input_file)
+    print(db.select(' (time > 50) or (qty < 30)'))
     db.outputtofile(output_file)
 
 
