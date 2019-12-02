@@ -5,9 +5,10 @@ from btree import BTree
 class database:
     def __init__(self, mode):
 
+        self.index = 0
         self.data = []
         self.time_record = []
-        self.index = 0
+        self.header = []
 
         if(mode == 'H'):
             self.structure_mode = "Hash"
@@ -17,18 +18,20 @@ class database:
             self.structure_mode = "B-Tree"
             self.key_to_index = BTree()
     
-    def load_data(self, input_url):
+    def inputfromfile(self, input_path):
         start_time = time.time()
-        f = requests.get(input_url)
-        text = f.text
-        data = text.split("\n")
-        data = data[1:]
-        for line in data:
-            line = line.split("|")
-            if(len(line) != 2):
-                break
-            self.insert(int(line[0]), int(line[1]))
-        return time.time() - start_time
+        try:
+            with open(input_path, "r") as f:
+                for line in f:
+                    line = line.replace("\n", "")
+                    line = line.split("|")
+                    row = [data for data in line]
+                    if len(self.header) == 0:
+                        self.header = row
+                    else: 
+                        self.data.append(row)
+        except:
+            print("Please input valid file path")
     
     def insert(self, key, value):
         start_time = time.time()
@@ -70,9 +73,13 @@ class database:
         return value
 
 if __name__ == "__main__":
-    mode = 'H' 
+
+    input_file = sys.argv[1]
+    mode = sys.argv[2]
+    # mode = 'H' 
     # mode = 'T'
     db = database(mode)
+    db.inputfromfile(input_file)
 
 
 
