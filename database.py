@@ -92,9 +92,12 @@ if __name__ == "__main__":
     mode = sys.argv[2]
     # mode = 'H' 
     # mode = 'T'
+
+    output_file = "test.txt"
+
     db = database(mode)
     db.inputfromfile(input_file)
-    db.outputtofile("text.txt")
+    db.outputtofile(output_file)
 
 
 
