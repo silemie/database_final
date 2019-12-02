@@ -86,6 +86,32 @@ class database:
         self.time_record.append(time.time() - start_time)
         return value
 
+    def select(self, condition):
+        relops = ['=', '!=', '>', '>=', '<', '<=']
+        arithops = ['+', '-', '*', '/']
+        logical_words = ['and', 'or']
+        result = []
+        start_time = time.time()
+        for logical_word in logical_words:
+            if condition.find(logical_word) != -1:
+                conditions = condition.split(logical_word)
+                for c in conditions:
+                    for relop in relops:
+                        if c.find(relop) != -1:
+                            exp_left = c.split(relop)[0]
+                            exp_right = c.split(relop)[1]
+                            if exp_left.isnumeric:
+                                col_index = self.header.index(exp_right)
+                                exp = exp_right
+                            else:
+                                col_index = self.header.index(exp_left)
+                                exp = exp_left
+                            for i in range(col_index, len(self.data) + 1):
+                                if eval(self.data[i] + relop + exp):
+                                    result.append(self.data[i - col_index:i + len(self.header)])
+        self.time_record.append(time.time() - start_time)
+        return result
+
 if __name__ == "__main__":
 
     input_file = sys.argv[1]
