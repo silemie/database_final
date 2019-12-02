@@ -29,7 +29,7 @@ class database:
                     if len(self.header) == 0:
                         self.header = row
                     else: 
-                        self.data.append(row)
+                        self.insert(int(row[0]), row)
         except:
             print("Please input valid file path")
     
