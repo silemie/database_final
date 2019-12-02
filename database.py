@@ -30,8 +30,22 @@ class database:
                         self.header = row
                     else: 
                         self.insert(int(row[0]), row)
-        except:
-            print("Please input valid file path")
+        except FileNotFoundError:
+            print("Please input valid input file path")
+    
+    def outputtofile(self, output_path):
+        start_time = time.time()
+        try:
+            with open(output_path, "w+") as f:
+                for h in self.header:
+                    f.write(str(h) + " ")
+                f.write("\n")
+                for line in self.data:
+                    for d in line:
+                        f.write(str(d) + " ")
+                    f.write("\n")
+        except FileNotFoundError:
+            print("Please input valid output file path")
     
     def insert(self, key, value):
         start_time = time.time()
@@ -80,6 +94,7 @@ if __name__ == "__main__":
     # mode = 'T'
     db = database(mode)
     db.inputfromfile(input_file)
+    db.outputtofile("text.txt")
 
 
 
