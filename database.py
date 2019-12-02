@@ -89,45 +89,35 @@ class database:
     def select(self, condition):
         relops = ['=', '!=', '>', '>=', '<', '<=']
         arithops = ['+', '-', '*', '/']
-
+        log_words = ['and','or']
         result = []
         start_time = time.time()
-        if condition.find('or') != -1:
-            conditions = condition.split('or')
-            for c in conditions:
-                c = c.replace("(","").strip()
-                c = c.replace(")", "").strip()
-                for relop in relops:
-                    if c.find(relop) != -1:
-                        exp_left = c.split(relop)[0].strip()
-                        exp_right = c.split(relop)[1].strip()
-                        if exp_left.isnumeric:
-                            col_index = self.header.index(exp_left)
-                            exp = exp_right
-                        else:
-                            col_index = self.header.index(exp_right)
-                            exp = exp_left
-                        for data in self.data:
-                            if eval(str(data[col_index]) + relop + exp):
-                                result.append(data)
-        if condition.find('and') != -1:
-            conditions = condition.split('and')
-            for data in self.data:
-                for c in conditions:
-                    c = c.replace("(", "").strip()
-                    c = c.replace(")", "").strip()
-                    for relop in relops:
-                        if c.find(relop) != -1:
-                            exp_left = c.split(relop)[0].strip()
-                            exp_right = c.split(relop)[1].strip()
-                            if exp_left.isnumeric:
-                                col_index = self.header.index(exp_left)
-                                exp = exp_right
-                            else:
-                                col_index = self.header.index(exp_right)
-                                exp = exp_left
-                            if eval(str(data[col_index]) + relop + exp):
-                                result.append(data)
+        for data in self.data:
+            count = 0
+            for log_word in log_words:
+                if condition.find(log_word) != -1:
+                    conditions = condition.split(log_word)
+                    for c in conditions:
+                        c = c.replace("(", "").strip()
+                        c = c.replace(")", "").strip()
+                        for relop in relops:
+                            if c.find(relop) != -1:
+                                exp_left = c.split(relop)[0].strip()
+                                exp_right = c.split(relop)[1].strip()
+                                if exp_left.isnumeric:
+                                    col_index = self.header.index(exp_left)
+                                    exp = exp_right
+                                else:
+                                    col_index = self.header.index(exp_right)
+                                    exp = exp_left
+                                if eval(str(data[col_index]) + relop + exp):
+                                    count = count+1
+                    if log_word.lower()=='or':
+                        if count > 0:
+                            result.append(data)
+                    else:
+                        if count == len(conditions):
+                            result.append(data)
         self.time_record.append(time.time() - start_time)
         return result
 
@@ -142,10 +132,9 @@ if __name__ == "__main__":
 
     db = database('H')
     db.inputfromfile(input_file)
-    print(db.select(' (time > 50) or (qty < 30)'))
     db.outputtofile(output_file)
-
-
+    db.data=db.select(' (time > 50) or (qty < 30)')
+    db.outputtofile("R1.txt")
 
 
 
