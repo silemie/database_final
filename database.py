@@ -55,7 +55,6 @@ class database:
         self.index += 1
         self.time_record.append(time.time() - start_time)
 
-    
     def delete(self, key):
         start_time = time.time()
         index = self.key_to_index.delete(key)
@@ -120,21 +119,31 @@ class database:
                             result.append(data)
         self.time_record.append(time.time() - start_time)
         return result
+    
+    def sort(self, condition):
+        pass
 
+def inputfromfile(input_path):
+    db = database('H')
+    db.inputfromfile(input_path)
+    return db
+
+def outputtofile(database, output_path):
+    database.outputtofile(output_path)
+
+def select(database, condition):
+    table = database.select(condition)
+    return table
+    
 if __name__ == "__main__":
 
     input_file = "sales1.txt"
-    #mode = sys.argv[2]
-    # mode = 'H' 
-    # mode = 'T'
-
     output_file = "test.txt"
 
-    db = database('H')
-    db.inputfromfile(input_file)
-    db.outputtofile(output_file)
-    db.data=db.select(' (time > 50) or (qty < 30)')
-    db.outputtofile("R1.txt")
+    db = inputfromfile(input_file)
+    outputtofile(db, output_file)
+    data = select(db, ' (time > 50) or (qty < 30)')
+    outputtofile(db, "R1.txt")
 
 
 
