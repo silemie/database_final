@@ -1,4 +1,4 @@
-import sys, requests, time
+import sys, requests, time, math
 from hash import Hash
 from btree import BTree
 
@@ -23,7 +23,8 @@ class table:
                     else:
                         self.data.append(row)
         except FileNotFoundError:
-            print("Please input valid input file path")
+            print("Error: File Does Not Exist")
+            exit(1)
 
     def creat_index(self,mode,key):
         if(mode == 'H'):
@@ -44,11 +45,14 @@ class table:
         self.indices.append(index)
 
     def findByName(self, name):
-        return self.header.index(name)
+        try:
+            return self.header.index(name)
+        except ValueError:
+            print("Value Error: Can't Find the Column: {}".format(name))
+            exit(1)
 
     def keyfunction(self, x, idxs):
         return tuple((x[i] for i in idxs))
-
 
 def inputfromfile(input_path):
     start_time = time.time()
@@ -68,7 +72,8 @@ def outputtofile(table, output_path):
                     f.write(str(d) + " ")
                 f.write("\n")
     except FileNotFoundError:
-        print("Please input valid output file path")
+        print("Error: Path is not valid")
+        exit(1)
     print('outputtofile:',time.time() - start_time)
 
 def select_single(table,single_condition):
@@ -136,6 +141,37 @@ def select(table, conditions):
     print('select:',time.time() - start_time)
     return result
 
+def avg(table, condition):
+    start_time = time.time()
+    data_size = float(len(table.data))
+    index = table.findByName(condition)
+    total = 0
+    try:
+        total = math.fsum(float(x[index]) for x in table.data)
+        print("avg:",time.time() - start_time )
+        return total / data_size
+    except ValueError:
+        print("ValueError: Column Value is not Valid")
+        exit(1)
+
+def sum(table, condition):
+    start_time = time.time()
+    index = table.findByName(condition)
+    total = 0  
+    try:
+        total = math.fsum(float(x[index]) for x in table.data)
+        print("sum:",time.time() - start_time)
+        return total
+    except ValueError:
+        print("ValueError: Column Value is not Valid")
+        exit(1)
+
+def count(table):
+    start_time = time.time()
+    size = len(table.data)
+    print("count:", time.time() - start_time)
+    return size
+
 def sort(table, *conditions):
     start_time = time.time()
     selected_cols = conditions
@@ -163,8 +199,11 @@ if __name__ == "__main__":
     output_file = "test.txt"
 
     db = inputfromfile(input_file) 
+    print("Count is:", count(db))
     data = select(db, ' (time > 50) or (qty < 30)')
     table = sort(db, 'itemid', 'saleid')
+    print("Average is:", avg(db, 'qty'))
+    print("Sum is:", sum(db, 'qty'))
     outputtofile(db, "R1.txt")
 
 
