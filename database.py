@@ -120,19 +120,36 @@ class database:
         self.time_record.append(time.time() - start_time)
         return result
     
-    def sort(self, condition):
-        pass
+    def sort(self, *conditions):
+        start_time = time.time()
+        selected_cols = conditions
+        names = []
+        for col in selected_cols:
+            names.append(self.findByName(col))
+        
+        sorted_data = sorted(self.data, key = lambda x : self.keyfunction(x, names))
+        return sorted_data
+    
+    def findByName(self, name):
+        return self.header.index(name)
+
+    def keyfunction(self, x, idxs):
+        return tuple((x[i] for i in idxs))
 
 def inputfromfile(input_path):
     db = database('H')
     db.inputfromfile(input_path)
     return db
 
-def outputtofile(database, output_path):
-    database.outputtofile(output_path)
+def outputtofile(db, output_path):
+    db.outputtofile(output_path)
 
-def select(database, condition):
-    table = database.select(condition)
+def select(db, condition):
+    table = db.select(condition)
+    return table
+
+def sort(db, *conditions):
+    table = db.sort(*conditions)
     return table
     
 if __name__ == "__main__":
@@ -140,9 +157,9 @@ if __name__ == "__main__":
     input_file = "sales1.txt"
     output_file = "test.txt"
 
-    db = inputfromfile(input_file)
-    outputtofile(db, output_file)
+    db = inputfromfile(input_file) 
     data = select(db, ' (time > 50) or (qty < 30)')
+    table = sort(db, 'itemid', 'saleid')
     outputtofile(db, "R1.txt")
 
 
