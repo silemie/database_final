@@ -2,8 +2,9 @@ import time
 
 
 class Hash:
-    def __init__(self):
+    def __init__(self, name):
         self.key_to_index = dict()
+        self.name = name
 
     # Input paramaters: key, value
     # Key: key of record

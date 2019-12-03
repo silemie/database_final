@@ -2,8 +2,9 @@ import time
 from BTrees.OOBTree import OOBTree
 
 class BTree:
-    def __init__(self):
+    def __init__(self, name):
         self.key_to_index = OOBTree()
+        self.name = name
     
     # Input paramaters: key, value
     # Key: key of record
