@@ -69,6 +69,8 @@ def outputtofile(table, output_path):
                 f.write("\n")
     except FileNotFoundError:
         print("Please input valid output file path")
+    print('outputtofile:',time.time() - start_time)
+
 def select_single(table,single_condition):
     relops = ['!=', '>', '>=', '<', '<=']
     arithops = ['+', '-', '*', '/']
@@ -142,13 +144,18 @@ def sort(table, *conditions):
         names.append(table.findByName(col))
 
     sorted_data = sorted(table.data, key = lambda x : table.keyfunction(x, names))
+    print('sort:',time.time() - start_time)
     return sorted_data
 
 def Hash(table,key):
+    start_time = time.time()
     table.creat_index('H',key)
+    print('hash:',time.time() - start_time)
 
 def BTree(table,key):
+    start_time = time.time()
     table.creat_index('T',key)
+    print('btree:',time.time() - start_time)
 
 if __name__ == "__main__":
 
