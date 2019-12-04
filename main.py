@@ -250,10 +250,54 @@ def sort(_table, *conditions):
 
 
 # ------------------------------------------------------------------
-# Moving Average, Sum, Count
+# Moving Average, Sum,
 # ------------------------------------------------------------------
 
-# TODO moving operations
+def movavg(_table, col, interval):
+    start_time = time.time()
+    total_size = len(_table.data)
+    col_index = _table.findByName(col)
+    count = 0
+    prev_count = 0
+    avg_val = []
+    interval_sum = 0
+    while count < total_size:
+        interval_sum += float(_table.data[count][col_index])
+        if(count - prev_count >= interval):
+            val = [interval_sum / float(interval)]
+            avg_val.append(val)
+            interval_sum -= float(_table.data[prev_count][col_index])
+            prev_count += 1
+        count += 1
+
+    header = ['Moving Average ' + col]
+    new_table = table()
+    new_table.setData(avg_val, header)
+    print("Moving Average:", time.time() - start_time)
+    return new_table
+
+def movsum(_table, col, interval):
+    start_time = time.time()
+    total_size = len(_table.data)
+    col_index = _table.findByName(col)
+    count = 0
+    prev_count = 0
+    interval_sum = 0
+    sum_val = []
+    while count < total_size:
+        interval_sum += float(_table.data[count][col_index])
+        if(count - prev_count >= interval):
+            val = [interval_sum]
+            sum_val.append(val)
+            interval_sum -= float(_table.data[prev_count][col_index])
+            prev_count += 1
+        count += 1
+
+    header = ['Moving Sum ' + col]
+    new_table = table()
+    new_table.setData(sum_val, header)
+    print("Moving Sum:", time.time() - start_time)
+    return new_table
 
 ######################################################################
 # Helper Function
