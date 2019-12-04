@@ -4,9 +4,7 @@ This is a program that implements a miniature relational database with order. Th
 
 ## Input
 
-`python3 database.py INPUT_FILE_PATH DATABASE_MODE`  
+`python3 main.py`  
 
-INPUT_FILE_PATH: The input file path
 
-DATABASE_MODE: 'H' for hash structure and 'T' for B-tree structure
 
