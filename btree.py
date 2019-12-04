@@ -32,6 +32,6 @@ class BTreeOnName:
     # Key: key of record
     # Return value: index of searched record in data. If not found, return -1
     def search(self, key):
-        if key in self.key_to_index:
-            return self.key_to_index[key]
+        if int(key) in self.key_to_index:
+            return self.key_to_index[int(key)]
         return -1

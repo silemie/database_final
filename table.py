@@ -16,7 +16,11 @@ class table:
                 for line in f:
                     line = line.replace("\n", "")
                     line = line.split("|")
-                    row = [data for data in line]
+                    row = []
+                    for data in line:
+                        if data.isdigit():
+                            data = int(data)
+                        row.append(data)
                     if len(self.header) == 0:
                         self.header = row
                     else:

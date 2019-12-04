@@ -185,6 +185,7 @@ def avggroup(_table, col, *conditions):
 
     new_table = table()
     new_table.setData(data, header)
+    new_table = sort(new_table, *conditions)
     print('avggroup:', time.time() - start_time)
     return new_table
 
@@ -206,6 +207,7 @@ def sumgroup(_table, col, *conditions):
 
     new_table = table()
     new_table.setData(data, header)
+    new_table = sort(new_table, *conditions)
     print('sumgroup:', time.time() - start_time)
     return new_table
 
@@ -226,6 +228,7 @@ def countgroup(_table, *conditions):
 
     new_table = table()
     new_table.setData(data, header)
+    new_table = sort(new_table, *conditions)
     print('countgroup:', time.time() - start_time)
     return new_table
 
@@ -244,7 +247,7 @@ def sort(_table, *conditions):
     names = []
     for col in selected_cols:
         names.append(_table.findByName(col))
-
+    
     sorted_data = sorted(_table.data, key=lambda x: _table.keyfunction(x, names))
     print('sort:', time.time() - start_time)
     new_table = table()
@@ -265,11 +268,11 @@ def movavg(_table, col, interval):
     avg_val = []
     interval_sum = 0
     while count < total_size:
-        interval_sum += float(_table.data[count][col_index])
+        interval_sum += int(_table.data[count][col_index])
         if(count - prev_count >= interval):
             val = [interval_sum / float(interval)]
             avg_val.append(val)
-            interval_sum -= float(_table.data[prev_count][col_index])
+            interval_sum -= int(_table.data[prev_count][col_index])
             prev_count += 1
         count += 1
 
@@ -288,11 +291,11 @@ def movsum(_table, col, interval):
     interval_sum = 0
     sum_val = []
     while count < total_size:
-        interval_sum += float(_table.data[count][col_index])
+        interval_sum += int(_table.data[count][col_index])
         if(count - prev_count >= interval):
             val = [interval_sum]
             sum_val.append(val)
-            interval_sum -= float(_table.data[prev_count][col_index])
+            interval_sum -= int(_table.data[prev_count][col_index])
             prev_count += 1
         count += 1
 
@@ -338,7 +341,7 @@ def select_single(_table, single_condition):
                 exp = exp_left
                 constance = exp_right
             for row in _table.data:
-                if eval(str(exp.replace(attribute, row[col_index]) + relop + constance)):
+                if eval(str(exp.replace(attribute, str(row[col_index])) + relop + constance)):
                     result.append(row)
             new_table = table()
             new_table.setData(result, _table.header, _table.indices)
@@ -409,7 +412,7 @@ def group(_table, index):
     groups = _table.findDistinct(index)
 
     for g in groups:
-        if g.isdigit():
+        if isinstance(g, int):
             tables.append(select(_table, '{} = {}'.format(_table.header[index], g)))
         else:
             tables.append(select(_table, "{} = '{}'".format(_table.header[index], g)))
@@ -454,3 +457,14 @@ if __name__ == "__main__":
     outputtofile(R4, 'R4.txt')
     outputtofile(R5, 'R5.txt')
     outputtofile(R6, 'R6.txt')
+
+    # S = inputfromfile("sales2.txt")
+
+    Q1 = select(R, 'qty = 5')
+    BTree(R, 'qty')
+    Q2 = select(R, 'qty = 5')
+    Q3 = select(R, 'itemid = 7')
+    Hash(R, 'itemid')
+    Q4 = select(R, 'itemid = 7')
+
+    

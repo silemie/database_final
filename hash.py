@@ -31,6 +31,6 @@ class HashOnName:
     # Key: key of record
     # Return value: index of searched record in data. If not found, return -1
     def search(self, key):
-        if self.key_to_index[key] is not None:
-            return self.key_to_index[key]
+        if self.key_to_index[int(key)] is not None:
+            return self.key_to_index[int(key)]
         return []
