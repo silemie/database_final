@@ -83,6 +83,7 @@ def select(_table, conditions):
 # ------------------------------------------------------------------
 
 def project(_table, *cols):
+    start_time = time.time()
     col_indices = []
     result = []
     header = []
@@ -97,6 +98,7 @@ def project(_table, *cols):
         result.append(row_data)
     new_table = table()
     new_table.setData(result,header,_table.indices)
+    print('Projection:', time.time() - start_time)
     return new_table
 
 # ------------------------------------------------------------------
@@ -443,8 +445,12 @@ if __name__ == "__main__":
 
     R = inputfromfile(input_file)
     R1 = select(R, "(time > 50) or (qty < 30)")
-    # R2 = project(R1, 'saleid', 'qty', 'pricerange')
-    # R3 = avg(R1, 'qty')
-    # R4 = sumgroup(R1, 'time', 'qty')
-    # R5 = sumgroup(R1, 'qty', 'time', 'pricerange')
-    # R6 = avggroup(R1, 'qty', 'pricerange')
+    R2 = project(R1, 'saleid', 'qty', 'pricerange')
+    R3 = avg(R1, 'qty')
+    R4 = sumgroup(R1, 'time', 'qty')
+    R5 = sumgroup(R1, 'qty', 'time', 'pricerange')
+    R6 = avggroup(R1, 'qty', 'pricerange')
+
+    outputtofile(R4, 'R4.txt')
+    outputtofile(R5, 'R5.txt')
+    outputtofile(R6, 'R6.txt')
