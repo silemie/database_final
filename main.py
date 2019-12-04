@@ -71,6 +71,7 @@ def select(_table, conditions):
             for d in select_single(_table, c).data:
                 if d not in result.data:
                     result.data.append(d)
+        result.header=_table.header
     else:
         result = select_single(_table, conditions)
     print('select:', time.time() - start_time)
@@ -400,11 +401,11 @@ if __name__ == "__main__":
 
     db = inputfromfile(input_file)
     print("Count is:", count(db).data[0])
-    selected_table = select(db, "(time = 50) and (pricerange = 'outrageous')")
-    print("Slected data is", selected_table.data)
+    selected_table = select(db, "(time > 50) or (qty < 30)")
+    print("Slected data is", selected_table.header)
     BTree(db, 'time')
     selected_table = select(db, ' (time = 50) and (qty < 30)')
-    print("Slected data is", selected_table.data)
+    print("Slected data is", selected_table.header)
     projected_table = project(db, 'saleid', 'qty', 'pricerange')
     print("Projected data is", projected_table.header)
     sorted_table = sort(db, 'itemid', 'saleid')
