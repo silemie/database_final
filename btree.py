@@ -1,7 +1,7 @@
 import time
 from BTrees.OOBTree import OOBTree
 
-class BTree:
+class BTreeOnName:
     def __init__(self, name):
         self.key_to_index = OOBTree()
         self.name = name
@@ -10,8 +10,14 @@ class BTree:
     # Key: key of record
     # Value: index of record in data
     def insert(self, key, value):
-        self.key_to_index.update({key : value})
-
+        if self.key_to_index.has_key(key):
+            arr = self.key_to_index.__getitem__(key)
+            arr += [value]
+            self.key_to_index.update({key:arr})
+        else:
+            arr = []
+            arr += [value]
+            self.key_to_index.update({key: arr})
     # Input paramaters: key
     # Key: key of record
     # Return value: index of deleted record in data

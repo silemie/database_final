@@ -1,6 +1,7 @@
 import sys, requests, time, math
-from hash import Hash
-from btree import BTree
+
+from hash import HashOnName
+from btree import BTreeOnName
 
 class table:
 
@@ -32,21 +33,25 @@ class table:
     def creat_index(self,mode,key):
         if(mode == 'H'):
             count = 0
-            index=Hash(key)
+            index= HashOnName(key)
             col_index = self.header.index(key)
             for row in self.data:
-                index.insert(count,row[col_index])
+                index.insert(row[col_index],count)
                 count = count + 1
-        self.index.append(index)
+            self.indices.append(index)
         if (mode == 'T'):
             count = 0
-            index = BTree(key)
+            index = BTreeOnName(key)
             col_index = self.header.index(key)
             for row in self.data:
-                index.insert(count, row[col_index])
+                index.insert(row[col_index],count)
                 count = count + 1
-        self.indices.append(index)
-
+            self.indices.append(index)
+    def findIndexByName(self,name):
+        for index in self.indices:
+            if index.name == name:
+                return index
+        return None
     def findByName(self, name):
         try:
             return self.header.index(name)
@@ -66,7 +71,12 @@ class table:
 
     def keyfunction(self, x, idxs):
         return tuple((x[i] for i in idxs))
-
+def is_number(s):
+    try:
+        float(s)
+        return True
+    except ValueError:
+        return False
 def inputfromfile(input_path):
     start_time = time.time()
     result = table()
@@ -100,14 +110,14 @@ def select_single(_table,single_condition):
         if single_condition.find(relop)!=-1:
             exp_left = single_condition.split(relop)[0].strip()
             exp_right = single_condition.split(relop)[1].strip()
-            if exp_left.isnumeric():
+            if is_number(exp_left):
                 attribute = exp_right
                 for arithop in arithops:
                     attribute = attribute.split(arithop)[0].strip()
                 col_index = _table.findByName(attribute)
                 exp = exp_right
                 constance = exp_left
-            else:
+            elif is_number(exp_right):
                 attribute = exp_left
                 for arithop in arithops:
                     attribute = attribute.split(arithop)[0].strip()
@@ -115,47 +125,92 @@ def select_single(_table,single_condition):
                 exp = exp_left
                 constance = exp_right
             for row in _table.data:
-                if eval(exp.replace(attribute,str(row[col_index]))+ relop + constance):
+                if eval(str(exp.replace(attribute,row[col_index])+ relop + constance)):
                     result.append(row)
-    return result
-    #TODO  equal
-'''
+            new_table = table()
+            new_table.setData(result,_table.header,_table.indices)
+            return new_table
+
     if single_condition.index('=') != -1:
         exp_left = single_condition.split('=')[0].strip()
         exp_right = single_condition.split('=')[1].strip()
-        if exp_left.index('\'') != -1:
+        if is_number(exp_left):
+            # find by index
+            if _table.findIndexByName(exp_right) is not None:
+                for i in _table.findIndexByName(exp_right).search(exp_left):
+                    result.append(_table.data[i])
+                new_table = table()
+                new_table.setData(result, _table.header, _table.indices)
+                return new_table
+            else:
+                attribute = exp_right
+                for arithop in arithops:
+                    attribute = attribute.split(arithop)[0].strip()
+                col_index = _table.findByName(attribute)
+                exp = exp_right
+                constance = exp_left
+                for row in _table.data:
+                    if eval(exp.replace(attribute, str(row[col_index])) + '==' + constance):
+                        result.append(row)
+                new_table = table()
+                new_table.setData(result, _table.header, _table.indices)
+                return new_table
+        elif is_number(exp_right):
+            # find by index
+            if _table.findIndexByName(exp_left) is not None:
+                for i in _table.findIndexByName(exp_left).search(exp_right):
+                    result.append(_table.data[i])
+                new_table = table()
+                new_table.setData(result, _table.header, _table.indices)
+                return new_table
+            else:
+                attribute = exp_left
+                for arithop in arithops:
+                    attribute = attribute.split(arithop)[0].strip()
+                col_index = _table.findByName(attribute)
+                exp = exp_left
+                constance = exp_right
+                for row in _table.data:
+                    if eval(exp.replace(attribute, str(row[col_index])) + '==' + constance):
+                        result.append(row)
+                new_table = table()
+                new_table.setData(result, _table.header, _table.indices)
+                return new_table
+        # string equality
+        if exp_left.find('\'') > -1:
             col_index = _table.findByName(exp_right)
             exp = exp_left
-        elif exp_right.index('\'') != -1:
-            col_index = _table.findByName(exp_right)
-            exp = exp_left
+        elif exp_right.find('\'') > -1:
+            col_index = _table.findByName(exp_left)
+            exp = exp_right
         for row in _table.data:
-            if eval(str(row[col_index]) + relop + exp):
+            if str(row[col_index]) == exp.replace('\'',''):
                 result.append(row)
-        return result
-'''
+        new_table = table()
+        new_table.setData(result, _table.header, _table.indices)
+        return new_table
+
 def select(_table, conditions):
     relops = ['>=','<=','!=','>', '<','=']
     arithops = ['+', '-', '*', '/']
     log_words = ['and','or']
-    result = []
+    result = table()
     start_time = time.time()
     if conditions.find('and') != -1:
-        result = _table.data
+        result = _table
         condition_list = conditions.split('and')
         for c in condition_list:
             result = select_single(result,c)
     elif conditions.find('or') != -1:
-        result = []
         condition_list = conditions.split('or')
         for c in condition_list:
-            result.append(select_single(_table,c))
+            for d in select_single(_table,c).data:
+                if d not in result.data:
+                    result.data.append(d)
     else:
-        select_single(_table,conditions)
+        result = select_single(_table,conditions)
     print('select:',time.time() - start_time)
-    new_table = table()
-    new_table.setData(result, _table.header, _table.indices)
-    return new_table
+    return result
 
 def avg(_table, condition):
     start_time = time.time()
@@ -247,8 +302,11 @@ if __name__ == "__main__":
 
     db = inputfromfile(input_file) 
     print("Count is:", count(db).data[0])
-    selected_table = select(db, ' (time > 50) or (qty < 30)')
-    print("Slected data is", selected_table.header)
+    selected_table = select(db, "(time = 50) and (pricerange = 'outrageous')")
+    print("Slected data is", selected_table.data)
+    BTree(db,'time')
+    selected_table = select(db, ' (time = 50) and (qty < 30)')
+    print("Slected data is", selected_table.data)
     sorted_table = sort(db, 'itemid', 'saleid')
     print("Sorted data is:", sorted_table.header)
     print("Average is:", avg(db, 'qty').data[0])
