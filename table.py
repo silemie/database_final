@@ -1,6 +1,7 @@
 import sys, requests, time, math
-from hash import Hash
-from btree import BTree
+
+from hash import HashOnName
+from btree import BTreeOnName
 
 class table:
 
@@ -32,21 +33,25 @@ class table:
     def creat_index(self,mode,key):
         if(mode == 'H'):
             count = 0
-            index=Hash(key)
+            index= HashOnName(key)
             col_index = self.header.index(key)
             for row in self.data:
-                index.insert(count,row[col_index])
+                index.insert(row[col_index],count)
                 count = count + 1
-        self.index.append(index)
+            self.indices.append(index)
         if (mode == 'T'):
             count = 0
-            index = BTree(key)
+            index = BTreeOnName(key)
             col_index = self.header.index(key)
             for row in self.data:
-                index.insert(count, row[col_index])
+                index.insert(row[col_index],count)
                 count = count + 1
-        self.indices.append(index)
-
+            self.indices.append(index)
+    def findIndexByName(self,name):
+        for index in self.indices:
+            if index.name == name:
+                return index
+        return None
     def findByName(self, name):
         try:
             return self.header.index(name)
