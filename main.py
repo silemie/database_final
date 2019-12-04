@@ -87,7 +87,22 @@ def select(_table, conditions):
 # Projection
 # ------------------------------------------------------------------
 
-# TODO projection
+def project(_table, *cols):
+    col_indices = []
+    result = []
+    header = []
+    for col in cols:
+        index = _table.findByName(col)
+        col_indices.append(index)
+        header.append(_table.header[index])
+    for row in _table.data:
+        row_data = []
+        for col_index in col_indices:
+            row_data.append(row[col_index])
+        result.append(row_data)
+    new_table = table()
+    new_table.setData(result,header,_table.indices)
+    return new_table
 
 # ------------------------------------------------------------------
 # Join
@@ -390,6 +405,8 @@ if __name__ == "__main__":
     BTree(db, 'time')
     selected_table = select(db, ' (time = 50) and (qty < 30)')
     print("Slected data is", selected_table.data)
+    projected_table = project(db, 'saleid', 'qty', 'pricerange')
+    print("Projected data is", projected_table.header)
     sorted_table = sort(db, 'itemid', 'saleid')
     print("Sorted data is:", sorted_table.header)
     print("Average is:", avg(db, 'qty').data[0])
