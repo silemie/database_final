@@ -72,6 +72,7 @@ def select(_table, conditions):
             for d in select_single(_table, c).data:
                 if d not in result.data:
                     result.data.append(d)
+        result.header=_table.header
     else:
         result = select_single(_table, conditions)
     print('select:', time.time() - start_time)
@@ -175,7 +176,7 @@ def avggroup(_table, col, *conditions):
         for name in conditions:
             row.append(t.data[0][_table.findByName(name)])
         data.append(row)
-    
+
     header = ['Average ' + col]
     for condition in conditions:
         header.append(condition)
