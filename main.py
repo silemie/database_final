@@ -54,6 +54,7 @@ def BTree(_table, key):
 # ------------------------------------------------------------------
 # Selection
 # ------------------------------------------------------------------
+
 def select(_table, conditions):
     relops = ['>=', '<=', '!=', '>', '<', '=']
     arithops = ['+', '-', '*', '/']
@@ -76,13 +77,6 @@ def select(_table, conditions):
         result = select_single(_table, conditions)
     print('select:', time.time() - start_time)
     return result
-
-
-# ------------------------------------------------------------------
-# Equal
-# ------------------------------------------------------------------
-
-# TODO  equal
 
 # ------------------------------------------------------------------
 # Projection
@@ -180,9 +174,10 @@ def avggroup(_table, col, *conditions):
     for t in tables:
         row = [avg(t, col).data[0]]
         for name in conditions:
-            row.append(t.data[_table.findByName(name)])
+            row.append(t.data[0][_table.findByName(name)])
         data.append(row)
-    header = [col]
+
+    header = ['Average ' + col]
     for condition in conditions:
         header.append(condition)
 
@@ -201,9 +196,9 @@ def sumgroup(_table, col, *conditions):
     for t in tables:
         row = [sum(t, col).data[0]]
         for name in conditions:
-            row.append(t.data[_table.findByName(name)])
+            row.append(t.data[0][_table.findByName(name)])
         data.append(row)
-    header = [col]
+    header = ['Sum ' + col]
     for condition in conditions:
         header.append(condition)
 
@@ -221,7 +216,7 @@ def countgroup(_table, *conditions):
     for t in tables:
         row = [count(t).data[0]]
         for name in conditions:
-            row.append(t.data[_table.findByName(name)])
+            row.append(t.data[0][_table.findByName(name)])
         data.append(row)
     header = ['Count']
     for condition in conditions:
@@ -368,7 +363,10 @@ def group(_table, index):
     groups = _table.findDistinct(index)
 
     for g in groups:
-        tables.append(select(_table, '{}={}'.format(_table.header[index], g)))
+        if g.isdigit():
+            tables.append(select(_table, '{} = {}'.format(_table.header[index], g)))
+        else:
+            tables.append(select(_table, "{} = '{}'".format(_table.header[index], g)))
 
     return tables
 
@@ -399,20 +397,10 @@ if __name__ == "__main__":
     input_file = "sales1.txt"
     output_file = "test.txt"
 
-    db = inputfromfile(input_file)
-    print("Count is:", count(db).data[0])
-    selected_table = select(db, "(time > 50) or (qty < 30)")
-    print("Slected data is", selected_table.header)
-    BTree(db, 'time')
-    selected_table = select(db, ' (time = 50) and (qty < 30)')
-    print("Slected data is", selected_table.header)
-    projected_table = project(db, 'saleid', 'qty', 'pricerange')
-    print("Projected data is", projected_table.header)
-    sorted_table = sort(db, 'itemid', 'saleid')
-    print("Sorted data is:", sorted_table.header)
-    print("Average is:", avg(db, 'qty').data[0])
-    print("Sum is:", sum(db, 'qty').data[0])
-    # print("GroupAvg is:", avggroup(db, 'qty', 'pricerange'))
-    # print("GroupSum is:", sumgroup(db, 'qty', 'pricerange'))
-    # print("GroupCount is:", countgroup(db, 'pricerange'))
-    outputtofile(db, "R1.txt")
+    R = inputfromfile(input_file)
+    R1 = select(R, "(time > 50) or (qty < 30)")
+    # R2 = project(R1, 'saleid', 'qty', 'pricerange')
+    # R3 = avg(R1, 'qty')
+    # R4 = sumgroup(R1, 'time', 'qty')
+    # R5 = sumgroup(R1, 'qty', 'time', 'pricerange')
+    # R6 = avggroup(R1, 'qty', 'pricerange')
