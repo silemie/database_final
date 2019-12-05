@@ -1,5 +1,11 @@
-import sys, requests, time, math
+######################################################################
+#                              table.py                              #
+#                 A SIMPLE DATABASE IMPLEMENTATION                   #
+######################################################################
+#                                                                    #
+######################################################################
 
+import sys, requests, time, math
 from hash import HashOnName
 from btree import BTreeOnName
 

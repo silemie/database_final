@@ -1,6 +1,23 @@
+######################################################################
+#                              main.py                               #
+#                 A SIMPLE DATABASE IMPLEMENTATION                   #
+######################################################################
+#                                                                    #
+######################################################################
+# Header Comment:                                                    #
+#  This file is the main part of database implementation             #
+#  Functions Including:                                              #
+#   1. Basic Operations: Select, Project, Join                       #
+#   2. Data Aggregation Operations: Count, Sum, Avg                  #
+#   3. Group Operations: Group Sum, Group Avg, Group Count           #
+#   4. Sort Operation                                                #
+#   5. Moving Operations: Moving Sum, Moving Avg                     #
+#   6. I/O Operations: Inputfromfile, Outputtofile                   #
+#   7. Index Related Operations: Index by Hash, Index by BTree       #
+######################################################################
+
 import sys, requests, time, math
 from table import table
-
 
 ######################################################################
 # Input / Output 
