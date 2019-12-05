@@ -1,6 +1,8 @@
 #Byte-compiled files
 
+.vagrant/
 __pycache__/
 sales1
 sales2
 *.txt
+*.log
