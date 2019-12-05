@@ -10,7 +10,7 @@ def inputfromfile(input_path):
     start_time = time.time()
     result = table()
     result.loadData(input_path)
-    print("inputfromfile:", (time.time() - start_time))
+    print("Time of inputfromfile is:", (time.time() - start_time))
     return result
 
 
@@ -28,7 +28,7 @@ def outputtofile(_table, output_path):
     except FileNotFoundError:
         print("Error: Path is not valid")
         exit(1)
-    print('outputtofile:', time.time() - start_time)
+    print('Time of outputtofile is:', time.time() - start_time)
 
 
 ######################################################################
@@ -38,13 +38,13 @@ def outputtofile(_table, output_path):
 def Hash(_table, key):
     start_time = time.time()
     _table.creat_index('H', key)
-    print('hash:', time.time() - start_time)
+    print('Time of hash is:', time.time() - start_time)
 
 
 def BTree(_table, key):
     start_time = time.time()
     _table.creat_index('T', key)
-    print('btree:', time.time() - start_time)
+    print('Time of btree is:', time.time() - start_time)
 
 
 ######################################################################
@@ -75,7 +75,7 @@ def select(_table, conditions):
         result.header=_table.header
     else:
         result = select_single(_table, conditions)
-    print('select:', time.time() - start_time)
+    print('Time of select is:', time.time() - start_time)
     return result
 
 # ------------------------------------------------------------------
@@ -98,7 +98,7 @@ def project(_table, *cols):
         result.append(row_data)
     new_table = table()
     new_table.setData(result,header,_table.indices)
-    print('Projection:', time.time() - start_time)
+    print('Time of projection is:', time.time() - start_time)
     return new_table
 
 # ------------------------------------------------------------------
@@ -111,7 +111,29 @@ def project(_table, *cols):
 # Concat
 # ------------------------------------------------------------------
 
-# TODO concat
+def concat(_table1, _table2):
+    start_time = time.time()
+    header1 = _table1.header
+    header2 = _table2.header
+
+    if len(header1) != len(header2):
+        print("Error: Data Schemas don't match")
+        return None
+    
+    for i,j in zip(header1, header2):
+        if i != j:
+           print("Error: Data Schemas don't match")
+           return None
+    
+    data1 = _table1.data
+    data2 = _table2.data
+    data = [*data1, *data2]
+    new_table = table()
+    new_table.setData(data, _table1.header)
+
+    print("Time of concat is", time.time() - start_time)
+
+    return new_table
 
 # ------------------------------------------------------------------
 # Data Aggregations: Average, Sum, Count
@@ -125,10 +147,10 @@ def avg(_table, condition):
     try:
         total = math.fsum(float(x[index]) for x in _table.data)
         header = ['Average {}'.format(condition)]
-        data = [total / data_size]
+        data = [[total / data_size]]
         new_table = table()
         new_table.setData(data, header)
-        print("avg:", time.time() - start_time)
+        print("Time of average is:", time.time() - start_time)
         return new_table
     except ValueError:
         print("ValueError: Column Value is not Valid")
@@ -142,10 +164,10 @@ def sum(_table, condition):
     try:
         total = math.fsum(float(x[index]) for x in _table.data)
         header = ['Sum {}'.format(condition)]
-        data = [total]
+        data = [[total]]
         new_table = table()
         new_table.setData(data, header)
-        print("sum:", time.time() - start_time)
+        print("Time of sum is:", time.time() - start_time)
         return new_table
     except ValueError:
         print("ValueError: Column Value is not Valid")
@@ -156,10 +178,10 @@ def count(_table):
     start_time = time.time()
     size = len(_table.data)
     header = ['Count']
-    data = [size]
+    data = [[size]]
     new_table = table()
     new_table.setData(data, header)
-    print("count:", time.time() - start_time)
+    print("Time of count is:", time.time() - start_time)
     return new_table
 
 
@@ -174,7 +196,7 @@ def avggroup(_table, col, *conditions):
 
     data = []
     for t in tables:
-        row = [avg(t, col).data[0]]
+        row = [avg(t, col).data[0][0]]
         for name in conditions:
             row.append(t.data[0][_table.findByName(name)])
         data.append(row)
@@ -186,7 +208,7 @@ def avggroup(_table, col, *conditions):
     new_table = table()
     new_table.setData(data, header)
     new_table = sort(new_table, *conditions)
-    print('avggroup:', time.time() - start_time)
+    print('Time of avggroup is:', time.time() - start_time)
     return new_table
 
 
@@ -197,7 +219,7 @@ def sumgroup(_table, col, *conditions):
 
     data = []
     for t in tables:
-        row = [sum(t, col).data[0]]
+        row = [sum(t, col).data[0][0]]
         for name in conditions:
             row.append(t.data[0][_table.findByName(name)])
         data.append(row)
@@ -208,7 +230,7 @@ def sumgroup(_table, col, *conditions):
     new_table = table()
     new_table.setData(data, header)
     new_table = sort(new_table, *conditions)
-    print('sumgroup:', time.time() - start_time)
+    print('Time of sumgroup is:', time.time() - start_time)
     return new_table
 
 
@@ -218,7 +240,7 @@ def countgroup(_table, *conditions):
 
     data = []
     for t in tables:
-        row = [count(t).data[0]]
+        row = [count(t).data[0][0]]
         for name in conditions:
             row.append(t.data[0][_table.findByName(name)])
         data.append(row)
@@ -229,7 +251,7 @@ def countgroup(_table, *conditions):
     new_table = table()
     new_table.setData(data, header)
     new_table = sort(new_table, *conditions)
-    print('countgroup:', time.time() - start_time)
+    print('Time of countgroup is:', time.time() - start_time)
     return new_table
 
 
@@ -249,7 +271,7 @@ def sort(_table, *conditions):
         names.append(_table.findByName(col))
     
     sorted_data = sorted(_table.data, key=lambda x: _table.keyfunction(x, names))
-    print('sort:', time.time() - start_time)
+    print('Time of sort is:', time.time() - start_time)
     new_table = table()
     new_table.setData(sorted_data, _table.header, _table.indices)
     return new_table
@@ -279,7 +301,7 @@ def movavg(_table, col, interval):
     header = ['Moving Average ' + col]
     new_table = table()
     new_table.setData(avg_val, header)
-    print("Moving Average:", time.time() - start_time)
+    print("Time of movavg is:", time.time() - start_time)
     return new_table
 
 def movsum(_table, col, interval):
@@ -302,7 +324,7 @@ def movsum(_table, col, interval):
     header = ['Moving Sum ' + col]
     new_table = table()
     new_table.setData(sum_val, header)
-    print("Moving Sum:", time.time() - start_time)
+    print("Time of movsum is:", time.time() - start_time)
     return new_table
 
 ######################################################################
@@ -453,12 +475,21 @@ if __name__ == "__main__":
     R4 = sumgroup(R1, 'time', 'qty')
     R5 = sumgroup(R1, 'qty', 'time', 'pricerange')
     R6 = avggroup(R1, 'qty', 'pricerange')
-
+    
+    outputtofile(R1, 'R1.txt')
+    outputtofile(R2, 'R2.txt')
+    outputtofile(R3, 'R3.txt')
     outputtofile(R4, 'R4.txt')
     outputtofile(R5, 'R5.txt')
     outputtofile(R6, 'R6.txt')
 
     # S = inputfromfile("sales2.txt")
+    # T = join(R, S, 'R.customerid = S.C')
+    # T1 = join(R1, S, '(R1.qty > S.Q) and (R1.saleid = S.saleid)')
+    # T2 = sort(T1, S_C)
+    # T2prime = sort(T1, R1_time, S_C)
+    # T3 = movavg(T2prime, R1_qty, 3)
+    # T4 = movsum(T2prime, P1_qty, 5)
 
     Q1 = select(R, 'qty = 5')
     BTree(R, 'qty')
@@ -466,5 +497,18 @@ if __name__ == "__main__":
     Q3 = select(R, 'itemid = 7')
     Hash(R, 'itemid')
     Q4 = select(R, 'itemid = 7')
+    Q5 = concat(Q4, Q2)
+
+    outputtofile(Q1, 'Q1.txt')
+    outputtofile(Q2, 'Q2.txt')
+    outputtofile(Q3, 'Q3.txt')
+    outputtofile(Q4, 'Q4.txt')
+    outputtofile(Q5, 'Q5.txt')
+
+    # outputtofile(T, T)
+    # outputtofile(T1, 'T1.txt')
+    # outputtofile(T2, 'T2.txt')
+    # outputtofile(T3, 'T3.txt')
+    # outputtofile(T4, 'T4.txt')
 
     
