@@ -575,6 +575,9 @@ def paraseInput(line,table_name_dict):
         # select
         elif function_name.find('select') != -1:
             table_name_dict[table_name] = select(table_name_dict.get(parameters.split(',',1)[0]), parameters.split(',',1)[1])
+        # concat
+        elif function_name.find('concat') != -1:
+            table_name_dict[table_name] = concat(table_name_dict.get(parameters.split(',',1)[0]), table_name_dict.get(parameters.split(',',1)[1]))
         print(table_name, table_name_dict[table_name].header,table_name_dict[table_name].data[:2])
     else:
         # Hash, Btree, outputtofile
@@ -613,4 +616,5 @@ if __name__ == "__main__":
             os.mkdir(directory)
         file_path = os.path.join(directory, table+".txt")
         outputtofile(table_name_dict.get(table),file_path)
+        print(table,len(table_name_dict.get(table).data))
     
