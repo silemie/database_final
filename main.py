@@ -15,8 +15,7 @@
 #   6. I/O Operations: Inputfromfile, Outputtofile                   #
 #   7. Index Related Operations: Index by Hash, Index by BTree       #
 ######################################################################
-
-import sys, requests, time, math
+import sys, requests, time, math, re
 from table import table
 
 ######################################################################
@@ -24,10 +23,9 @@ from table import table
 ######################################################################
 
 def inputfromfile(input_path):
-    start_time = time.time()
+
     result = table()
     result.loadData(input_path)
-    print("Time of inputfromfile is:", (time.time() - start_time))
     return result
 
 
@@ -45,7 +43,7 @@ def outputtofile(_table, output_path):
     except FileNotFoundError:
         print("Error: Path is not valid")
         exit(1)
-    print('Time of outputtofile is:', time.time() - start_time)
+
 
 
 ######################################################################
@@ -55,13 +53,11 @@ def outputtofile(_table, output_path):
 def Hash(_table, key):
     start_time = time.time()
     _table.creat_index('H', key)
-    print('Time of hash is:', time.time() - start_time)
 
 
-def BTree(_table, key):
+def Btree(_table, key):
     start_time = time.time()
     _table.creat_index('T', key)
-    print('Time of btree is:', time.time() - start_time)
 
 
 ######################################################################
@@ -92,7 +88,6 @@ def select(_table, conditions):
         result.header=_table.header
     else:
         result = select_single(_table, conditions)
-    print('Time of select is:', time.time() - start_time)
     return result
 
 # ------------------------------------------------------------------
@@ -115,14 +110,29 @@ def project(_table, *cols):
         result.append(row_data)
     new_table = table()
     new_table.setData(result,header,_table.indices)
-    print('Time of projection is:', time.time() - start_time)
     return new_table
 
 # ------------------------------------------------------------------
 # Join
 # ------------------------------------------------------------------
-
-# TODO join
+def join(_table1,_table2,_table1_name,_table2_name,conditions):
+    data1 = _table1.data
+    data2 = _table2.data
+    header = [_table1_name +'_'+ s for s in _table1.header]
+    header += [_table2_name +'_'+ s for s in _table2.header]
+    result = table()
+    indices1 = _table1.indices
+    indices2 = _table2.indices
+    result.setData([x+y for x,y in zip(data1,data2)],header,[x+y for x,y in zip(indices1,indices2)])
+    if conditions.find('and') != -1:
+        condition_list = conditions.split('and')
+        for c in condition_list:
+            c=c.replace('.','_')
+            result = select_single(result, c)
+    else:
+        conditions = conditions.replace('.','_')
+        result = select_single(result, conditions)
+    return result
 
 # ------------------------------------------------------------------
 # Concat
@@ -148,7 +158,6 @@ def concat(_table1, _table2):
     new_table = table()
     new_table.setData(data, _table1.header)
 
-    print("Time of concat is", time.time() - start_time)
 
     return new_table
 
@@ -167,7 +176,6 @@ def avg(_table, condition):
         data = [[total / data_size]]
         new_table = table()
         new_table.setData(data, header)
-        print("Time of average is:", time.time() - start_time)
         return new_table
     except ValueError:
         print("ValueError: Column Value is not Valid")
@@ -184,7 +192,6 @@ def sum(_table, condition):
         data = [[total]]
         new_table = table()
         new_table.setData(data, header)
-        print("Time of sum is:", time.time() - start_time)
         return new_table
     except ValueError:
         print("ValueError: Column Value is not Valid")
@@ -198,7 +205,6 @@ def count(_table):
     data = [[size]]
     new_table = table()
     new_table.setData(data, header)
-    print("Time of count is:", time.time() - start_time)
     return new_table
 
 
@@ -210,7 +216,6 @@ def avggroup(_table, col, *conditions):
     start_time = time.time()
     key_index = _table.findByName(col)
     tables = groupByMulti(_table, *conditions)
-
     data = []
     for t in tables:
         row = [avg(t, col).data[0][0]]
@@ -218,14 +223,13 @@ def avggroup(_table, col, *conditions):
             row.append(t.data[0][_table.findByName(name)])
         data.append(row)
 
-    header = ['Average ' + col]
+    header = ['Average_' + col]
     for condition in conditions:
         header.append(condition)
 
     new_table = table()
     new_table.setData(data, header)
     new_table = sort(new_table, *conditions)
-    print('Time of avggroup is:', time.time() - start_time)
     return new_table
 
 
@@ -233,21 +237,19 @@ def sumgroup(_table, col, *conditions):
     start_time = time.time()
     key_index = _table.findByName(col)
     tables = groupByMulti(_table, *conditions)
-
     data = []
     for t in tables:
         row = [sum(t, col).data[0][0]]
         for name in conditions:
             row.append(t.data[0][_table.findByName(name)])
         data.append(row)
-    header = ['Sum ' + col]
+    header = ['Sum_' + col]
     for condition in conditions:
         header.append(condition)
 
     new_table = table()
     new_table.setData(data, header)
     new_table = sort(new_table, *conditions)
-    print('Time of sumgroup is:', time.time() - start_time)
     return new_table
 
 
@@ -268,7 +270,6 @@ def countgroup(_table, *conditions):
     new_table = table()
     new_table.setData(data, header)
     new_table = sort(new_table, *conditions)
-    print('Time of countgroup is:', time.time() - start_time)
     return new_table
 
 
@@ -288,7 +289,6 @@ def sort(_table, *conditions):
         names.append(_table.findByName(col))
     
     sorted_data = sorted(_table.data, key=lambda x: _table.keyfunction(x, names))
-    print('Time of sort is:', time.time() - start_time)
     new_table = table()
     new_table.setData(sorted_data, _table.header, _table.indices)
     return new_table
@@ -315,7 +315,7 @@ def movavg(_table, col, interval):
             prev_count += 1
         count += 1
 
-    header = ['Moving Average ' + col]
+    header = ['MovingAverage_' + col]
     new_table = table()
     new_table.setData(avg_val, header)
     print("Time of movavg is:", time.time() - start_time)
@@ -338,10 +338,9 @@ def movsum(_table, col, interval):
             prev_count += 1
         count += 1
 
-    header = ['Moving Sum ' + col]
+    header = ['MovingSum_' + col]
     new_table = table()
     new_table.setData(sum_val, header)
-    print("Time of movsum is:", time.time() - start_time)
     return new_table
 
 ######################################################################
@@ -359,8 +358,8 @@ def select_single(_table, single_condition):
     relops = ['!=', '>', '>=', '<', '<=']
     arithops = ['+', '-', '*', '/']
     result = []
-    single_condition = single_condition.replace('(', '').strip()
-    single_condition = single_condition.replace(')', '').strip()
+    single_condition = single_condition.replace('(', '').replace(')', '')
+    #single_condition = ''.join(single_condition.split())
     for relop in relops:
         if single_condition.find(relop) != -1:
             exp_left = single_condition.split(relop)[0].strip()
@@ -372,6 +371,9 @@ def select_single(_table, single_condition):
                 col_index = _table.findByName(attribute)
                 exp = exp_right
                 constance = exp_left
+                for row in _table.data:
+                    if eval(str(exp.replace(attribute, str(row[col_index])) + relop + constance)):
+                        result.append(row)
             elif is_number(exp_right):
                 attribute = exp_left
                 for arithop in arithops:
@@ -379,9 +381,21 @@ def select_single(_table, single_condition):
                 col_index = _table.findByName(attribute)
                 exp = exp_left
                 constance = exp_right
-            for row in _table.data:
-                if eval(str(exp.replace(attribute, str(row[col_index])) + relop + constance)):
-                    result.append(row)
+                for row in _table.data:
+                    if eval(str(exp.replace(attribute, str(row[col_index])) + relop + constance)):
+                        result.append(row)
+            else:
+                attribute1 = exp_left
+                for arithop in arithops:
+                    attribute1 = attribute1.split(arithop)[0].strip()
+                col1_index = _table.findByName(attribute1)
+                attribute2 = exp_right
+                for arithop in arithops:
+                    attribute2 = attribute2.split(arithop)[0].strip()
+                col2_index = _table.findByName(attribute2)
+                for row in _table.data:
+                    if eval(str(exp_left.replace(attribute1, str(row[col1_index])) + relop + str(exp_right.replace(attribute2, str(row[col2_index]))))):
+                        result.append(row)
             new_table = table()
             new_table.setData(result, _table.header, _table.indices)
             return new_table
@@ -432,15 +446,27 @@ def select_single(_table, single_condition):
                 new_table.setData(result, _table.header, _table.indices)
                 return new_table
         # string equality
-        if exp_left.find('\'') > -1:
-            col_index = _table.findByName(exp_right)
-            exp = exp_left
-        elif exp_right.find('\'') > -1:
-            col_index = _table.findByName(exp_left)
-            exp = exp_right
-        for row in _table.data:
-            if str(row[col_index]) == exp.replace('\'', ''):
-                result.append(row)
+        if single_condition.find("'") > -1:
+            if exp_left.find('\'') > -1:
+                col_index = _table.findByName(exp_right)
+                exp = exp_left
+            else:
+                col_index = _table.findByName(exp_left)
+                exp = exp_right
+            for row in _table.data:
+                if str(row[col_index]) == exp.replace('\'', ''):
+                    result.append(row)
+            new_table = table()
+            new_table.setData(result, _table.header, _table.indices)
+            return new_table
+
+        # column equality
+        if isinstance(exp_left, str) and isinstance(exp_right, str) :
+            col_index1 = _table.findByName(exp_left)
+            col_index2 = _table.findByName(exp_right)
+            for row in _table.data:
+                if str(row[col_index1]) == str(row[col_index2]):
+                    result.append(row)
         new_table = table()
         new_table.setData(result, _table.header, _table.indices)
         return new_table
@@ -473,59 +499,115 @@ def groupByMulti(_table, *conditions):
             for gt in grouped_tables:
                 new_tables.append(gt)
         tables = new_tables
-
     return tables
 
+def paraseInput(line,table_name_dict):
+
+    line = line.split('//')[0]
+    line = ''.join(line.split())
+    if line.find(':=')!=-1:
+        table_name = line.split(":=")[0]
+        function_call = line.split(":=")[1]
+        function_name, parameters = function_call.split('(',1)
+        parameters= parameters.replace('(','').replace(')','')
+        # inputfromfile
+        if function_name.find('inputfromfile') != -1:
+            if parameters.find('.txt') != -1:
+                table_name_dict[table_name] = inputfromfile(parameters)
+            else:
+                table_name_dict[table_name] = inputfromfile(parameters+'.txt')
+        # select
+        elif function_name.find('select') != -1:
+            table_name_dict[table_name] = select(table_name_dict.get(parameters.split(',', 1)[0]),parameters.split(',', 1)[1])
+        # project
+        elif function_name.find('project') != -1:
+            args = parameters.split(',')
+            table_name_dict[table_name] = project(table_name_dict.get(args[0]), *args[1:])
+        # avggroup
+        elif function_name.find('avggroup') != -1:
+            args = parameters.split(',')
+            table_name_dict[table_name] = avggroup(table_name_dict.get(args[0]), args[1], *args[2:])
+        # movavg
+        elif function_name.find('movavg') != -1:
+            args = parameters.split(',')
+            table_name_dict[table_name] = movavg(table_name_dict.get(args[0]), args[1],int(args[2]))
+        # movsum
+        elif function_name.find('movsum') != -1:
+            args = parameters.split(',')
+            table_name_dict[table_name] = movsum(table_name_dict.get(args[0]),args[1],int(args[2]))
+        # avg
+        elif function_name.find('avg') != -1:
+            table_name_dict[table_name] = avg(table_name_dict.get(parameters.split(',',1)[0]), parameters.split(',',1)[1])
+        # sumgroup
+        elif function_name.find('sumgroup') != -1:
+            args = parameters.split(',')
+            table_name_dict[table_name] = sumgroup(table_name_dict.get(args[0]), args[1], *args[2:])
+        # join
+        elif function_name.find('join') != -1:
+            args = parameters.split(',')
+            table_name_dict[table_name] = join(table_name_dict.get(args[0]),table_name_dict.get(args[1]),args[0],args[1],args[2])
+        # sort
+        elif function_name.find('sort') != -1:
+            args = parameters.split(',')
+            table_name_dict[table_name] = sort(table_name_dict.get(args[0]), *args[1:])
+        # select
+        elif function_name.find('select') != -1:
+            table_name_dict[table_name] = select(table_name_dict.get(parameters.split(',',1)[0]), parameters.split(',',1)[1])
+        print(table_name, table_name_dict[table_name].header,table_name_dict[table_name].data[:2])
+    else:
+        # Hash, Btree, outputtofile
+        function_name, parameters = line.split('(', 1)
+        parameters = parameters.replace('(', '').replace(')', '')
+        if function_name.find('Hash') != -1:
+            Hash(table_name_dict.get(parameters.split(',',1)[0]), parameters.split(',',1)[1])
+        elif function_name.find('Btree') != -1:
+            Btree(table_name_dict.get(parameters.split(',',1)[0]), parameters.split(',',1)[1])
+        elif function_name.find('outputtofile') != -1:
+            outputtofile(table_name_dict.get(parameters.split(',',1)[0]), parameters.split(',',1)[1])
+        else:
+            print(line)
+            exec(line)
 
 ######################################################################
 # Main Function
 ######################################################################
 
 if __name__ == "__main__":
-    input_file = "sales1.txt"
-    output_file = "test.txt"
-
-    R = inputfromfile(input_file)
-    R1 = select(R, "(time > 50) or (qty < 30)")
-    R2 = project(R1, 'saleid', 'qty', 'pricerange')
-    R3 = avg(R1, 'qty')
-    R4 = sumgroup(R1, 'time', 'qty')
-    R5 = sumgroup(R1, 'qty', 'time', 'pricerange')
-    R6 = avggroup(R1, 'qty', 'pricerange')
-    
-    outputtofile(R1, 'R1.txt')
-    outputtofile(R2, 'R2.txt')
-    outputtofile(R3, 'R3.txt')
-    outputtofile(R4, 'R4.txt')
-    outputtofile(R5, 'R5.txt')
-    outputtofile(R6, 'R6.txt')
-
-    # S = inputfromfile("sales2.txt")
-    # T = join(R, S, 'R.customerid = S.C')
-    # T1 = join(R1, S, '(R1.qty > S.Q) and (R1.saleid = S.saleid)')
-    # T2 = sort(T1, S_C)
-    # T2prime = sort(T1, R1_time, S_C)
-    # T3 = movavg(T2prime, R1_qty, 3)
-    # T4 = movsum(T2prime, P1_qty, 5)
-
-    Q1 = select(R, 'qty = 5')
-    BTree(R, 'qty')
-    Q2 = select(R, 'qty = 5')
-    Q3 = select(R, 'itemid = 7')
-    Hash(R, 'itemid')
-    Q4 = select(R, 'itemid = 7')
-    Q5 = concat(Q4, Q2)
-
-    outputtofile(Q1, 'Q1.txt')
-    outputtofile(Q2, 'Q2.txt')
-    outputtofile(Q3, 'Q3.txt')
-    outputtofile(Q4, 'Q4.txt')
-    outputtofile(Q5, 'Q5.txt')
-
-    # outputtofile(T, T)
-    # outputtofile(T1, 'T1.txt')
-    # outputtofile(T2, 'T2.txt')
-    # outputtofile(T3, 'T3.txt')
-    # outputtofile(T4, 'T4.txt')
-
+    try:
+        with open("inputs.txt", "r") as input_file:
+            opeartions = input_file.readlines()
+    except FileNotFoundError:
+        print("Error: Path is not valid")
+        exit(1)
+    table_name_dict = dict()
+    for line in opeartions:
+        if not line.startswith('//'):
+            start_time = time.time()
+            paraseInput(line,table_name_dict)
+            #print('Time of %s is:' % line, time.time() - start_time)
+'''
+    R := inputfromfile(sales1) // import vertical bar delimited foo, first line has column headers. Suppose they are saleid|itemid|customerid|storeid|time|qty|pricerange In general there can be more or fewer columns than this.
+    R1 := select(R, (time > 50) or (qty < 30))  // select * from R where time > 50 or qty < 30
+    R2 := project(R1, saleid, qty, pricerange) // select saleid, qty, pricerange from R1
+    R3 := avg(R1, qty) // select avg(qty) from R1
+    R4 := sumgroup(R1, time, qty) // select sum(time), qty from R1 group by qty
+    R5 := sumgroup(R1, qty, time, pricerange) // select sum(qty), time, pricerange from R1 group by time, pricerange
+    R6 := avggroup(R1, qty, pricerange) // select avg(qty), pricerange from R1 group by by pricerange
+    S := inputfromfile(sales2) // suppose column headers are saleid|I|C|S|T|Q|P
+    T := join(R, S, R.customerid = S.C) // select * from R, S where R.customerid = S.C
+    T1 := join(R1, S, (R1.qty > S.Q) and (R1.saleid = S.saleid)) // select * from R1, S w
+    T2 := sort(T1, S_C) // sort T1 by S_C
+    T2prime := sort(T1, R1_time, S_C) // sort T1 by R1_time, S_C (in that order)
+    T3 := movavg(T2prime, R1_qty, 3) // perform the three item moving average of T2prime on column R_qty. This will be as long as R_qty with the three way moving average of 4 8 9 7 being 4 6 7 8
+    T4 := movsum(T2prime, R1_qty, 5) // perform the five item moving sum of T2prime on column R_qty
+    Q1 := select(R, qty = 5) // select * from R where qty=5
+    Btree(R, qty) // create an index on R based on column qty Equality selections and joins on R should use the index. All indexes will be on one column (both Btree and Hash)
+    Q2 := select(R, qty = 5) // this should use the index
+    Q3 := select(R, itemid = 7) // select * from R where itemid = 7
+    Hash(R,itemid)
+    Q4 := select(R, itemid = 7) // this should use the hash index
+    Q5 := concat(Q4, Q2) // concatenate the two tables (must have the same schema) Duplicate rows may result (though not with this example).
+    outputtofile(Q5, Q5) // This should output the table Q5 into a file with the same name and with vertical bar separators
+    outputtofile(T, T) // This should output the table T
+'''
     
