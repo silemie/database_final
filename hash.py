@@ -4,6 +4,11 @@
 ######################################################################
 #                                                                    #
 ######################################################################
+# Header Comment:                                                    #
+#  This file is implementation of Hash structure                     #
+#  The Hash class contains insert, search, delete ops                #
+######################################################################
+
 import time
 
 class HashOnName:

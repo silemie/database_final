@@ -22,13 +22,16 @@ from table import table
 # Input / Output 
 ######################################################################
 
+# Input paramaters: input path
+# Return: A table loaded data from the input path
+# This method loads data from input path
 def inputfromfile(input_path):
-
     result = table()
     result.loadData(input_path)
     return result
 
-
+# Input paramaters: output path
+# This method outputs data given a table and output path
 def outputtofile(_table, output_path):
     start_time = time.time()
     try:
@@ -45,16 +48,18 @@ def outputtofile(_table, output_path):
         exit(1)
 
 
-
 ######################################################################
 # Hash / Btree Index
 ######################################################################
 
+# Input paramaters: the name of column
+# This method creates index with hash structure
 def Hash(_table, key):
     start_time = time.time()
     _table.creat_index('H', key)
 
-
+# Input paramaters: the name of column
+# This method creates index with btree structure
 def Btree(_table, key):
     start_time = time.time()
     _table.creat_index('T', key)
@@ -68,6 +73,9 @@ def Btree(_table, key):
 # Selection
 # ------------------------------------------------------------------
 
+# Input paramaters: table, select conditions
+# Return: A table with selective data
+# This method selects data given a set of conditions
 def select(_table, conditions):
     relops = ['>=', '<=', '!=', '>', '<', '=']
     arithops = ['+', '-', '*', '/']
@@ -94,6 +102,9 @@ def select(_table, conditions):
 # Projection
 # ------------------------------------------------------------------
 
+# Input paramaters: table, project conditions
+# Return: A table with projected data
+# This method projects data given a set of conditions
 def project(_table, *cols):
     start_time = time.time()
     col_indices = []
@@ -138,6 +149,9 @@ def join(_table1,_table2,_table1_name,_table2_name,conditions):
 # Concat
 # ------------------------------------------------------------------
 
+# Input paramaters: two tables
+# Return: A table with combining two tables
+# This method connects two tables together
 def concat(_table1, _table2):
     start_time = time.time()
     header1 = _table1.header
@@ -165,6 +179,9 @@ def concat(_table1, _table2):
 # Data Aggregations: Average, Sum, Count
 # ------------------------------------------------------------------
 
+# Input paramaters: table, a name of column
+# Return: A table with average value
+# This method aggregates data given a table and a key column to calculate average value
 def avg(_table, condition):
     start_time = time.time()
     data_size = float(len(_table.data))
@@ -181,7 +198,9 @@ def avg(_table, condition):
         print("ValueError: Column Value is not Valid")
         exit(1)
 
-
+# Input paramaters: table, a name of column
+# Return: A table with sum value
+# This method aggregates data given a table and a key column to calculate sum value
 def sum(_table, condition):
     start_time = time.time()
     index = _table.findByName(condition)
@@ -197,7 +216,9 @@ def sum(_table, condition):
         print("ValueError: Column Value is not Valid")
         exit(1)
 
-
+# Input paramaters: table
+# Return: A table with count value
+# This method aggregates data given a table to calculate count value
 def count(_table):
     start_time = time.time()
     size = len(_table.data)
@@ -212,6 +233,9 @@ def count(_table):
 # Group Average, Sum, Count
 # ------------------------------------------------------------------
 
+# Input paramaters: table, a name of column, conditions
+# Return: A table with group average value
+# This method aggregates data by group given a table and a key column to calculate average value
 def avggroup(_table, col, *conditions):
     start_time = time.time()
     key_index = _table.findByName(col)
@@ -223,7 +247,7 @@ def avggroup(_table, col, *conditions):
             row.append(t.data[0][_table.findByName(name)])
         data.append(row)
 
-    header = ['Average_' + col]
+    header = ['Average ' + col]
     for condition in conditions:
         header.append(condition)
 
@@ -232,7 +256,9 @@ def avggroup(_table, col, *conditions):
     new_table = sort(new_table, *conditions)
     return new_table
 
-
+# Input paramaters: table, a name of column, conditions
+# Return: A table with group sum value
+# This method aggregates data by group given a table and a key column to calculate sum value
 def sumgroup(_table, col, *conditions):
     start_time = time.time()
     key_index = _table.findByName(col)
@@ -243,7 +269,7 @@ def sumgroup(_table, col, *conditions):
         for name in conditions:
             row.append(t.data[0][_table.findByName(name)])
         data.append(row)
-    header = ['Sum_' + col]
+    header = ['Sum ' + col]
     for condition in conditions:
         header.append(condition)
 
@@ -252,7 +278,9 @@ def sumgroup(_table, col, *conditions):
     new_table = sort(new_table, *conditions)
     return new_table
 
-
+# Input paramaters: table, a name of column, conditions
+# Return: A table with group count value
+# This method aggregates data by group given a table and a key column to calculate count value
 def countgroup(_table, *conditions):
     start_time = time.time()
     tables = groupByMulti(_table, *conditions)
@@ -281,6 +309,9 @@ def countgroup(_table, *conditions):
 # Sort
 # ------------------------------------------------------------------
 
+# Input paramaters: table, conditions
+# Return: A table with sorted data
+# This method sorts data by given conditions
 def sort(_table, *conditions):
     start_time = time.time()
     selected_cols = conditions
@@ -298,6 +329,9 @@ def sort(_table, *conditions):
 # Moving Average, Sum,
 # ------------------------------------------------------------------
 
+# Input paramaters: table, a name of column, counting interval
+# Return: A table with moving average value
+# This method aggregates data by interval value given a table and a key column to calculate average value
 def movavg(_table, col, interval):
     start_time = time.time()
     total_size = len(_table.data)
@@ -315,12 +349,15 @@ def movavg(_table, col, interval):
             prev_count += 1
         count += 1
 
-    header = ['MovingAverage_' + col]
+    header = ['Moving Average ' + col]
     new_table = table()
     new_table.setData(avg_val, header)
     print("Time of movavg is:", time.time() - start_time)
     return new_table
 
+# Input paramaters: table, a name of column, counting interval
+# Return: A table with moving sum value
+# This method aggregates data by interval value given a table and a key column to calculate sum value
 def movsum(_table, col, interval):
     start_time = time.time()
     total_size = len(_table.data)
@@ -338,7 +375,7 @@ def movsum(_table, col, interval):
             prev_count += 1
         count += 1
 
-    header = ['MovingSum_' + col]
+    header = ['Moving Sum ' + col]
     new_table = table()
     new_table.setData(sum_val, header)
     return new_table
@@ -584,30 +621,5 @@ if __name__ == "__main__":
         if not line.startswith('//'):
             start_time = time.time()
             paraseInput(line,table_name_dict)
-            #print('Time of %s is:' % line, time.time() - start_time)
-'''
-    R := inputfromfile(sales1) // import vertical bar delimited foo, first line has column headers. Suppose they are saleid|itemid|customerid|storeid|time|qty|pricerange In general there can be more or fewer columns than this.
-    R1 := select(R, (time > 50) or (qty < 30))  // select * from R where time > 50 or qty < 30
-    R2 := project(R1, saleid, qty, pricerange) // select saleid, qty, pricerange from R1
-    R3 := avg(R1, qty) // select avg(qty) from R1
-    R4 := sumgroup(R1, time, qty) // select sum(time), qty from R1 group by qty
-    R5 := sumgroup(R1, qty, time, pricerange) // select sum(qty), time, pricerange from R1 group by time, pricerange
-    R6 := avggroup(R1, qty, pricerange) // select avg(qty), pricerange from R1 group by by pricerange
-    S := inputfromfile(sales2) // suppose column headers are saleid|I|C|S|T|Q|P
-    T := join(R, S, R.customerid = S.C) // select * from R, S where R.customerid = S.C
-    T1 := join(R1, S, (R1.qty > S.Q) and (R1.saleid = S.saleid)) // select * from R1, S w
-    T2 := sort(T1, S_C) // sort T1 by S_C
-    T2prime := sort(T1, R1_time, S_C) // sort T1 by R1_time, S_C (in that order)
-    T3 := movavg(T2prime, R1_qty, 3) // perform the three item moving average of T2prime on column R_qty. This will be as long as R_qty with the three way moving average of 4 8 9 7 being 4 6 7 8
-    T4 := movsum(T2prime, R1_qty, 5) // perform the five item moving sum of T2prime on column R_qty
-    Q1 := select(R, qty = 5) // select * from R where qty=5
-    Btree(R, qty) // create an index on R based on column qty Equality selections and joins on R should use the index. All indexes will be on one column (both Btree and Hash)
-    Q2 := select(R, qty = 5) // this should use the index
-    Q3 := select(R, itemid = 7) // select * from R where itemid = 7
-    Hash(R,itemid)
-    Q4 := select(R, itemid = 7) // this should use the hash index
-    Q5 := concat(Q4, Q2) // concatenate the two tables (must have the same schema) Duplicate rows may result (though not with this example).
-    outputtofile(Q5, Q5) // This should output the table Q5 into a file with the same name and with vertical bar separators
-    outputtofile(T, T) // This should output the table T
-'''
+            print('Time of %s is:' % line, time.time() - start_time)
     

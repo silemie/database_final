@@ -1,9 +1,14 @@
 ######################################################################
-#                              btree.py                              #
+#                             btree.py                               #
 #                 A SIMPLE DATABASE IMPLEMENTATION                   #
 ######################################################################
 #                                                                    #
 ######################################################################
+# Header Comment:                                                    #
+#  This file is implementation of Btree structure                    #
+#  The Btree class contains insert, search, delete ops               #
+######################################################################
+
 import time
 from BTrees.OOBTree import OOBTree
 
