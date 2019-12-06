@@ -15,6 +15,7 @@
 #   6. I/O Operations: Inputfromfile, Outputtofile                   #
 #   7. Index Related Operations: Index by Hash, Index by BTree       #
 ######################################################################
+import os
 import sys, requests, time, math, re
 from table import table
 
@@ -35,12 +36,12 @@ def inputfromfile(input_path):
 def outputtofile(_table, output_path):
     try:
         with open(output_path, "w+") as f:
-            for h in _table.header:
-                f.write(str(h) + " ")
-            f.write("\n")
+            #for h in _table.header:
+                #f.write(str(h) + "\t")
+            #f.write("\n")
             for line in _table.data:
                 for d in line:
-                    f.write(str(d) + " ")
+                    f.write(str(d) + "\t")
                 f.write("\n")
     except FileNotFoundError:
         print("Error: Path is not valid")
@@ -606,4 +607,10 @@ if __name__ == "__main__":
             start_time = time.time()
             paraseInput(line,table_name_dict)
             print('Time of %s is:' % line, time.time() - start_time)
+    for table in table_name_dict:
+        directory = ".//output//"
+        if not os.path.isdir(directory):
+            os.mkdir(directory)
+        file_path = os.path.join(directory, table+".txt")
+        outputtofile(table_name_dict.get(table),file_path)
     
