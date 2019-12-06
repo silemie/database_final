@@ -33,7 +33,6 @@ def inputfromfile(input_path):
 # Input paramaters: output path
 # This method outputs data given a table and output path
 def outputtofile(_table, output_path):
-    start_time = time.time()
     try:
         with open(output_path, "w+") as f:
             for h in _table.header:
@@ -55,13 +54,11 @@ def outputtofile(_table, output_path):
 # Input paramaters: the name of column
 # This method creates index with hash structure
 def Hash(_table, key):
-    start_time = time.time()
     _table.creat_index('H', key)
 
 # Input paramaters: the name of column
 # This method creates index with btree structure
 def Btree(_table, key):
-    start_time = time.time()
     _table.creat_index('T', key)
 
 
@@ -81,7 +78,6 @@ def select(_table, conditions):
     arithops = ['+', '-', '*', '/']
     log_words = ['and', 'or']
     result = table()
-    start_time = time.time()
     if conditions.find('and') != -1:
         result = _table
         condition_list = conditions.split('and')
@@ -106,7 +102,6 @@ def select(_table, conditions):
 # Return: A table with projected data
 # This method projects data given a set of conditions
 def project(_table, *cols):
-    start_time = time.time()
     col_indices = []
     result = []
     header = []
@@ -153,7 +148,6 @@ def join(_table1,_table2,_table1_name,_table2_name,conditions):
 # Return: A table with combining two tables
 # This method connects two tables together
 def concat(_table1, _table2):
-    start_time = time.time()
     header1 = _table1.header
     header2 = _table2.header
 
@@ -183,7 +177,6 @@ def concat(_table1, _table2):
 # Return: A table with average value
 # This method aggregates data given a table and a key column to calculate average value
 def avg(_table, condition):
-    start_time = time.time()
     data_size = float(len(_table.data))
     index = _table.findByName(condition)
     total = 0
@@ -202,7 +195,6 @@ def avg(_table, condition):
 # Return: A table with sum value
 # This method aggregates data given a table and a key column to calculate sum value
 def sum(_table, condition):
-    start_time = time.time()
     index = _table.findByName(condition)
     total = 0
     try:
@@ -220,7 +212,6 @@ def sum(_table, condition):
 # Return: A table with count value
 # This method aggregates data given a table to calculate count value
 def count(_table):
-    start_time = time.time()
     size = len(_table.data)
     header = ['Count']
     data = [[size]]
@@ -237,7 +228,6 @@ def count(_table):
 # Return: A table with group average value
 # This method aggregates data by group given a table and a key column to calculate average value
 def avggroup(_table, col, *conditions):
-    start_time = time.time()
     key_index = _table.findByName(col)
     tables = groupByMulti(_table, *conditions)
     data = []
@@ -260,7 +250,6 @@ def avggroup(_table, col, *conditions):
 # Return: A table with group sum value
 # This method aggregates data by group given a table and a key column to calculate sum value
 def sumgroup(_table, col, *conditions):
-    start_time = time.time()
     key_index = _table.findByName(col)
     tables = groupByMulti(_table, *conditions)
     data = []
@@ -282,7 +271,6 @@ def sumgroup(_table, col, *conditions):
 # Return: A table with group count value
 # This method aggregates data by group given a table and a key column to calculate count value
 def countgroup(_table, *conditions):
-    start_time = time.time()
     tables = groupByMulti(_table, *conditions)
 
     data = []
@@ -313,7 +301,6 @@ def countgroup(_table, *conditions):
 # Return: A table with sorted data
 # This method sorts data by given conditions
 def sort(_table, *conditions):
-    start_time = time.time()
     selected_cols = conditions
     names = []
     for col in selected_cols:
@@ -333,7 +320,6 @@ def sort(_table, *conditions):
 # Return: A table with moving average value
 # This method aggregates data by interval value given a table and a key column to calculate average value
 def movavg(_table, col, interval):
-    start_time = time.time()
     total_size = len(_table.data)
     col_index = _table.findByName(col)
     count = 0
@@ -352,14 +338,12 @@ def movavg(_table, col, interval):
     header = ['Moving Average ' + col]
     new_table = table()
     new_table.setData(avg_val, header)
-    print("Time of movavg is:", time.time() - start_time)
     return new_table
 
 # Input paramaters: table, a name of column, counting interval
 # Return: A table with moving sum value
 # This method aggregates data by interval value given a table and a key column to calculate sum value
 def movsum(_table, col, interval):
-    start_time = time.time()
     total_size = len(_table.data)
     col_index = _table.findByName(col)
     count = 0
@@ -497,12 +481,12 @@ def select_single(_table, single_condition):
             new_table.setData(result, _table.header, _table.indices)
             return new_table
 
-        # column equality
+        # column comparision
         if isinstance(exp_left, str) and isinstance(exp_right, str) :
             col_index1 = _table.findByName(exp_left)
             col_index2 = _table.findByName(exp_right)
             for row in _table.data:
-                if str(row[col_index1]) == str(row[col_index2]):
+                if eval(str(row[col_index1])+relop+str(row[col_index2])):
                     result.append(row)
         new_table = table()
         new_table.setData(result, _table.header, _table.indices)
