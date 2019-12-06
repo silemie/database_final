@@ -123,6 +123,7 @@ def project(_table, *cols):
 # Join
 # ------------------------------------------------------------------
 def join(_table1,_table2,_table1_name,_table2_name,conditions):
+    relops = ['!=', '>', '>=', '<', '<=']
     data1 = _table1.data
     data2 = _table2.data
     header = [_table1_name +'_'+ s for s in _table1.header]
@@ -130,17 +131,49 @@ def join(_table1,_table2,_table1_name,_table2_name,conditions):
     result = table()
     indices1 = _table1.indices
     indices2 = _table2.indices
-    result.setData([x+y for x,y in zip(data1,data2)],header,[x+y for x,y in zip(indices1,indices2)])
-    if conditions.find('and') != -1:
-        condition_list = conditions.split('and')
-        for c in condition_list:
-            c=c.replace('.','_')
-            result = select_single(result, c)
-    else:
-        conditions = conditions.replace('.','_')
-        result = select_single(result, conditions)
-    return result
+    new_data = []
+    #new_data = [x+y for x,y in zip(data1,data2)] #inner join
+    for data_a in data1:
+        for data_b in data2:
+            row = data_a+data_b
+            # multi-conditions
+            if conditions.find('and') != -1:
+                condition_list = conditions.split('and')
+                for c in condition_list:
+                    c = c.replace('.', '_')
+                    find = False
+                    for relop in relops:
+                        if c.find(relop) != -1:
+                            find = True
+                            exp_left = c.split(relop)[0].strip()
+                            exp_right = c.split(relop)[1].strip()
+                    if not find and c.find('=') != -1 :
+                        exp_left = c.split('=')[0].strip()
+                        exp_right = c.split('=')[1].strip()
+                    col_index1 = header.index(exp_left)
+                    col_index2 = header.index(exp_right)
+                    if eval(str(row[col_index1]) + '==' + str(row[col_index2])):
+                        new_data.append(row)
+            # single condition
+            else:
+                c = conditions.replace('.', '_')
+                find = False
+                for relop in relops:
+                    if c.find(relop) != -1:
+                        find = True
+                        exp_left = c.split(relop)[0].strip()
+                        exp_right = c.split(relop)[1].strip()
+                if not find and c.find('=') != -1:
+                    exp_left = c.split('=')[0].strip()
+                    exp_right = c.split('=')[1].strip()
+                col_index1 = header.index(exp_left)
+                col_index2 = header.index(exp_right)
+                if eval(str(row[col_index1]) + '==' + str(row[col_index2])):
+                    new_data.append(row)
+                    print(exp_left,col_index1,exp_right,col_index2,row)
+    result.setData(new_data,header)
 
+    return result
 # ------------------------------------------------------------------
 # Concat
 # ------------------------------------------------------------------
@@ -382,11 +415,12 @@ def select_single(_table, single_condition):
     result = []
     single_condition = single_condition.replace('(', '').replace(')', '')
     #single_condition = ''.join(single_condition.split())
+    # inequality
     for relop in relops:
         if single_condition.find(relop) != -1:
             exp_left = single_condition.split(relop)[0].strip()
             exp_right = single_condition.split(relop)[1].strip()
-            if is_number(exp_left):
+            if is_number(exp_left): # 1 > qty-5
                 attribute = exp_right
                 for arithop in arithops:
                     attribute = attribute.split(arithop)[0].strip()
@@ -396,7 +430,7 @@ def select_single(_table, single_condition):
                 for row in _table.data:
                     if eval(str(exp.replace(attribute, str(row[col_index])) + relop + constance)):
                         result.append(row)
-            elif is_number(exp_right):
+            elif is_number(exp_right): # qty-5 > 1
                 attribute = exp_left
                 for arithop in arithops:
                     attribute = attribute.split(arithop)[0].strip()
@@ -406,7 +440,7 @@ def select_single(_table, single_condition):
                 for row in _table.data:
                     if eval(str(exp.replace(attribute, str(row[col_index])) + relop + constance)):
                         result.append(row)
-            else:
+            else: # column comparision
                 attribute1 = exp_left
                 for arithop in arithops:
                     attribute1 = attribute1.split(arithop)[0].strip()
@@ -421,7 +455,7 @@ def select_single(_table, single_condition):
             new_table = table()
             new_table.setData(result, _table.header, _table.indices)
             return new_table
-
+    # equality
     if single_condition.index('=') != -1:
         exp_left = single_condition.split('=')[0].strip()
         exp_right = single_condition.split('=')[1].strip()
@@ -451,9 +485,6 @@ def select_single(_table, single_condition):
             if _table.findIndexByName(exp_left) is not None:
                 for i in _table.findIndexByName(exp_left).search(exp_right):
                     result.append(_table.data[i])
-                new_table = table()
-                new_table.setData(result, _table.header, _table.indices)
-                return new_table
             else:
                 attribute = exp_left
                 for arithop in arithops:
@@ -464,11 +495,8 @@ def select_single(_table, single_condition):
                 for row in _table.data:
                     if eval(exp.replace(attribute, str(row[col_index])) + '==' + constance):
                         result.append(row)
-                new_table = table()
-                new_table.setData(result, _table.header, _table.indices)
-                return new_table
         # string equality
-        if single_condition.find("'") > -1:
+        elif single_condition.find("'") > -1:
             if exp_left.find('\'') > -1:
                 col_index = _table.findByName(exp_right)
                 exp = exp_left
@@ -478,16 +506,12 @@ def select_single(_table, single_condition):
             for row in _table.data:
                 if str(row[col_index]) == exp.replace('\'', ''):
                     result.append(row)
-            new_table = table()
-            new_table.setData(result, _table.header, _table.indices)
-            return new_table
-
-        # column comparision
-        if isinstance(exp_left, str) and isinstance(exp_right, str) :
+        # column equality
+        elif isinstance(exp_left, str) and isinstance(exp_right, str) :
             col_index1 = _table.findByName(exp_left)
             col_index2 = _table.findByName(exp_right)
             for row in _table.data:
-                if eval(str(row[col_index1])+relop+str(row[col_index2])):
+                if eval(str(row[col_index1])+'=='+str(row[col_index2])):
                     result.append(row)
         new_table = table()
         new_table.setData(result, _table.header, _table.indices)
@@ -578,7 +602,7 @@ def paraseInput(line,table_name_dict):
         # concat
         elif function_name.find('concat') != -1:
             table_name_dict[table_name] = concat(table_name_dict.get(parameters.split(',',1)[0]), table_name_dict.get(parameters.split(',',1)[1]))
-        print(table_name, table_name_dict[table_name].header,table_name_dict[table_name].data[:2])
+        #print(table_name, table_name_dict[table_name].header,table_name_dict[table_name].data[:2])
     else:
         # Hash, Btree, outputtofile
         function_name, parameters = line.split('(', 1)
@@ -609,7 +633,7 @@ if __name__ == "__main__":
         if not line.startswith('//'):
             start_time = time.time()
             paraseInput(line,table_name_dict)
-            print('Time of %s is:' % line, time.time() - start_time)
+            #print('Time of %s is:' % line, time.time() - start_time)
     for table in table_name_dict:
         directory = ".//output//"
         if not os.path.isdir(directory):
