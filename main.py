@@ -394,48 +394,70 @@ def sort(_table, *conditions):
 # Return: A table with moving average value
 # This method aggregates data by interval value given a table and a key column to calculate average value
 def movavg(_table, col, interval):
+    new_table = table()
+    data = []
     total_size = len(_table.data)
     col_index = _table.findByName(col)
     count = 0
     prev_count = 0
-    avg_val = []
     interval_sum = 0
+
     while count < total_size:
         interval_sum += int(_table.data[count][col_index])
-        if(count - prev_count >= interval):
-            val = [interval_sum / float(interval)]
-            avg_val.append(val)
-            interval_sum -= int(_table.data[prev_count][col_index])
-            prev_count += 1
+        if(count - prev_count < interval):
+            val = interval_sum / float(count - prev_count + 1)
+        else:
+            if(count - prev_count >= interval):
+                interval_sum -= int(_table.data[prev_count][col_index])
+                prev_count += 1
+            val = interval_sum / float(interval)
+        row = []
+        for d in _table.data[count]:
+            row.append(d)
+        row.append(val)
+        data.append(row)
         count += 1
 
-    header = ['Moving Average ' + col]
-    new_table = table()
-    new_table.setData(avg_val, header)
+    header = []
+    for h in _table.header:
+        header.append(h)
+    header.append("Moving Avg" + col)
+    new_table.setData(data, header)
     return new_table
 
 # Input paramaters: table, a name of column, counting interval
 # Return: A table with moving sum value
 # This method aggregates data by interval value given a table and a key column to calculate sum value
 def movsum(_table, col, interval):
+    new_table = table()
+    data = []
     total_size = len(_table.data)
     col_index = _table.findByName(col)
     count = 0
     prev_count = 0
     interval_sum = 0
-    sum_val = []
+
     while count < total_size:
         interval_sum += int(_table.data[count][col_index])
-        if(count - prev_count >= interval):
-            val = [interval_sum]
-            sum_val.append(val)
-            interval_sum -= int(_table.data[prev_count][col_index])
-            prev_count += 1
+        if(count - prev_count < interval):
+            val = interval_sum 
+        else:
+            if(count - prev_count >= interval):
+                interval_sum -= int(_table.data[prev_count][col_index])
+                prev_count += 1
+            val = interval_sum 
+        row = []
+        for d in _table.data[count]:
+            row.append(d)
+        row.append(val)
+        data.append(row)
         count += 1
 
-    header = ['Moving Sum ' + col]
-    new_table = table()
-    new_table.setData(sum_val, header)
+    header = []
+    for h in _table.header:
+        header.append(h)
+    header.append("Moving Sum" + col)
+    new_table.setData(data, header)
     return new_table
 
 ######################################################################
