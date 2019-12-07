@@ -124,54 +124,61 @@ def project(_table, *cols):
 # ------------------------------------------------------------------
 def join(_table1,_table2,_table1_name,_table2_name,conditions):
     relops = ['!=', '>', '>=', '<', '<=']
-    data1 = _table1.data
-    data2 = _table2.data
     header = [_table1_name +'_'+ s for s in _table1.header]
     header += [_table2_name +'_'+ s for s in _table2.header]
     result = table()
     indices1 = _table1.indices
     indices2 = _table2.indices
     new_data = []
-    #new_data = [x+y for x,y in zip(data1,data2)] #inner join
-    for data_a in data1:
-        for data_b in data2:
-            row = data_a+data_b
-            # multi-conditions
-            if conditions.find('and') != -1:
-                condition_list = conditions.split('and')
-                for c in condition_list:
-                    c = c.replace('.', '_')
-                    find = False
-                    for relop in relops:
-                        if c.find(relop) != -1:
-                            find = True
-                            exp_left = c.split(relop)[0].strip()
-                            exp_right = c.split(relop)[1].strip()
-                    if not find and c.find('=') != -1 :
-                        exp_left = c.split('=')[0].strip()
-                        exp_right = c.split('=')[1].strip()
-                    col_index1 = header.index(exp_left)
-                    col_index2 = header.index(exp_right)
-                    if eval(str(row[col_index1]) + '==' + str(row[col_index2])):
-                        new_data.append(row)
-            # single condition
+
+    condition_list = conditions.split('and')
+    for c in condition_list:
+        c = c.replace('.', '_')
+        find = False
+        for relop in relops:
+            if c.find(relop) != -1:
+                find = True
+                exp_left = c.split(relop)[0].strip()
+                exp_right = c.split(relop)[1].strip()
+                break
+        if not find and c.find('=') != -1 :
+            exp_left = c.split('=')[0].strip()
+            exp_right = c.split('=')[1].strip()
+        exp_left=exp_left.split('_')[1]
+        exp_right=exp_right.split('_')[1]
+        col_index1 = _table1.header.index(exp_left)
+        col_index2 = _table2.header.index(exp_right)
+        data1 = sorted(_table1.data,key=lambda x: x[col_index1])
+        data2 = sorted(_table2.data,key=lambda x: x[col_index2])
+        start_row_a = 0
+        start_row_b = 0
+        count = 0
+        print('here')
+        pre = None
+        for data_a in data1:
+            start = False
+            if data_a[col_index1] == pre:
+                start_row_b = start_row_a
             else:
-                c = conditions.replace('.', '_')
-                find = False
-                for relop in relops:
-                    if c.find(relop) != -1:
-                        find = True
-                        exp_left = c.split(relop)[0].strip()
-                        exp_right = c.split(relop)[1].strip()
-                if not find and c.find('=') != -1:
-                    exp_left = c.split('=')[0].strip()
-                    exp_right = c.split('=')[1].strip()
-                col_index1 = header.index(exp_left)
-                col_index2 = header.index(exp_right)
-                if eval(str(row[col_index1]) + '==' + str(row[col_index2])):
-                    new_data.append(row)
-                    print(exp_left,col_index1,exp_right,col_index2,row)
-    result.setData(new_data,header)
+                start_row_a = start_row_b
+            pre = data_a[col_index1]
+            for i in range(start_row_b,len(data2)):
+                if not find:
+                    if eval(str(data_a[col_index1]) + '==' + str(data2[i][col_index2])):
+                        start = True
+                        new_data.append(data_a+data2[i])
+                        print(count,data_a+data2[i])
+                        count+=1
+                    elif start and eval(str(data_a[col_index1]) + '<' + str(data2[i][col_index2])):
+                        start_row_b = i
+                        break
+                    elif eval(str(data_a[col_index1]) + '<' + str(data2[i][col_index2])):
+                        break
+                else:
+                    if eval(str(data_a[col_index1]) + relop + str(data2[i][col_index2])):
+                        new_data.append(data_a+data2[i])
+                        count+=1
+    result.setData(new_data,header,indices1+indices2)
 
     return result
 # ------------------------------------------------------------------
@@ -339,7 +346,7 @@ def sort(_table, *conditions):
     names = []
     for col in selected_cols:
         names.append(_table.findByName(col))
-    
+
     sorted_data = sorted(_table.data, key=lambda x: _table.keyfunction(x, names))
     new_table = table()
     new_table.setData(sorted_data, _table.header, _table.indices)
