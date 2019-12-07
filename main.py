@@ -124,37 +124,38 @@ def project(_table, *cols):
 # ------------------------------------------------------------------
 def join(_table1,_table2,_table1_name,_table2_name,conditions):
     relops = ['!=', '>', '>=', '<', '<=']
-    header = [_table1_name +'_'+ s for s in _table1.header]
-    header += [_table2_name +'_'+ s for s in _table2.header]
+    arithops = ['+', '-', '*', '/']
+    header = [_table1_name +'_'+ s for s in _table1.header] + [_table2_name +'_'+ s for s in _table2.header]
     result = table()
-    indices1 = _table1.indices
-    indices2 = _table2.indices
+    indices1, indices2= _table1.indices,_table2.indices
     new_data = []
-
+    pre_data = []
     condition_list = conditions.split('and')
-    for c in condition_list:
-        c = c.replace('.', '_')
-        find = False
-        for relop in relops:
-            if c.find(relop) != -1:
-                find = True
-                exp_left = c.split(relop)[0].strip()
-                exp_right = c.split(relop)[1].strip()
-                break
-        if not find and c.find('=') != -1 :
-            exp_left = c.split('=')[0].strip()
-            exp_right = c.split('=')[1].strip()
-        exp_left=exp_left.split('_')[1]
-        exp_right=exp_right.split('_')[1]
-        col_index1 = _table1.header.index(exp_left)
-        col_index2 = _table2.header.index(exp_right)
-        data1 = sorted(_table1.data,key=lambda x: x[col_index1])
-        data2 = sorted(_table2.data,key=lambda x: x[col_index2])
-        start_row_a = 0
-        start_row_b = 0
-        count = 0
-        print('here')
-        pre = None
+    condition = condition_list[-1]
+    find = False
+    for relop in relops:
+        if condition.find(relop) != -1:
+            find = True
+            exp_left, exp_right= condition.split(relop)[0].strip(),condition.split(relop)[1].strip()
+            break
+    if not find and condition.find('=') != -1 :
+        exp_left, exp_right = condition.split('=')[0].strip(), condition.split('=')[1].strip()
+    attribute1, attribute2 = exp_left, exp_right
+    for arithop in arithops:
+        attribute1,attribute2  = attribute1.split(arithop)[0].strip(),attribute2.split(arithop)[0].strip()
+    col_name1, col_name2 = attribute1.split('.')[1].strip(), attribute2.split('.')[1].strip()
+    col_index1, col_index2 = _table1.findByName(col_name1),_table2.findByName(col_name2)
+    if (not find) or (relop=='>') or (relop=='>='):
+        data1 = sorted(_table1.data, key=lambda x: x[col_index1])
+        data2 = sorted(_table2.data, key=lambda x: x[col_index2])
+        start_row_a,start_row_b,pre = 0,0,None
+        if not find:
+            relop = '=='
+            non_relop = '<'
+        elif relop == '>':
+            non_relop ='<='
+        elif relop =='>=':
+            non_relop = '<'
         for data_a in data1:
             start = False
             if data_a[col_index1] == pre:
@@ -163,23 +164,55 @@ def join(_table1,_table2,_table1_name,_table2_name,conditions):
                 start_row_a = start_row_b
             pre = data_a[col_index1]
             for i in range(start_row_b,len(data2)):
-                if not find:
-                    if eval(str(data_a[col_index1]) + '==' + str(data2[i][col_index2])):
+                    if eval(exp_left.replace(attribute1,str(data_a[col_index1]))+ relop + exp_right.replace(attribute2,str(data2[i][col_index2]))):
                         start = True
                         new_data.append(data_a+data2[i])
-                        print(count,data_a+data2[i])
-                        count+=1
-                    elif start and eval(str(data_a[col_index1]) + '<' + str(data2[i][col_index2])):
+                    elif start and eval(exp_left.replace(attribute1,str(data_a[col_index1]))+ non_relop + exp_right.replace(attribute2,str(data2[i][col_index2]))):
                         start_row_b = i
                         break
-                    elif eval(str(data_a[col_index1]) + '<' + str(data2[i][col_index2])):
+                    elif eval(exp_left.replace(attribute1,str(data_a[col_index1]))+ non_relop + exp_right.replace(attribute2,str(data2[i][col_index2]))):
                         break
-                else:
-                    if eval(str(data_a[col_index1]) + relop + str(data2[i][col_index2])):
-                        new_data.append(data_a+data2[i])
-                        count+=1
-    result.setData(new_data,header,indices1+indices2)
-
+    else:
+        if relop == '<':
+            non_relop ='>='
+        elif relop =='<=':
+            non_relop = '>'
+        else:
+            non_relop = '=='
+        data1 = sorted(_table1.data, key=lambda x: x[col_index1],reversed=True)
+        data2 = sorted(_table2.data, key=lambda x: x[col_index2],reversed=True)
+        start_row_a, start_row_b, pre = 0, 0, None
+        for data_a in data1:
+            start = False
+            if data_a[col_index1] == pre:
+                start_row_b = start_row_a
+            else:
+                start_row_a = start_row_b
+            pre = data_a[col_index1]
+            for i in range(start_row_b, len(data2)):
+                if eval(exp_left.replace(attribute1, str(data_a[col_index1])) + relop + exp_right.replace(attribute2,
+                                                                                                         str(data2[
+                                                                                                                 i][
+                                                                                                                 col_index2]))):
+                    start = True
+                    new_data.append(data_a + data2[i])
+                elif start and eval(
+                        exp_left.replace(attribute1, str(data_a[col_index1])) + non_relop + exp_right.replace(attribute2,
+                                                                                                        str(data2[
+                                                                                                                i][
+                                                                                                                col_index2]))):
+                    start_row_b = i
+                    break
+                elif eval(
+                        exp_left.replace(attribute1, str(data_a[col_index1])) + non_relop + exp_right.replace(attribute2,
+                                                                                                        str(data2[
+                                                                                                                i][
+                                                                                                                col_index2]))):
+                    break
+    result.setData(new_data, header, indices1 + indices2)
+    if len(condition_list)>1:
+        for c in condition_list[:-1]:
+            result = select_single(result,c.replace('.','_'))
     return result
 # ------------------------------------------------------------------
 # Concat
@@ -524,7 +557,6 @@ def select_single(_table, single_condition):
         new_table.setData(result, _table.header, _table.indices)
         return new_table
 
-
 def group(_table, index):
     tables = []
     groups = _table.findDistinct(index)
@@ -640,7 +672,7 @@ if __name__ == "__main__":
         if not line.startswith('//'):
             start_time = time.time()
             paraseInput(line,table_name_dict)
-            #print('Time of %s is:' % line, time.time() - start_time)
+            print('Time of %s is:' % line, time.time() - start_time)
     for table in table_name_dict:
         directory = ".//output//"
         if not os.path.isdir(directory):
