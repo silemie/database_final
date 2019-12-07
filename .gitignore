@@ -6,3 +6,4 @@ sales1
 sales2
 *.txt
 *.log
+.DS_Store
