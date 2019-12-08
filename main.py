@@ -690,8 +690,6 @@ def praseInput(line,table_name_dict):
 if __name__ == "__main__":
     try:
         inputfilepath = sys.argv[1]
-        if inputfilepath.find('.txt')==-1:
-            inputfilepath = inputfilepath+'.txt'
         with open(inputfilepath, "r") as input_file:
             opeartions = input_file.readlines()
     except FileNotFoundError:
