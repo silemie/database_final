@@ -669,6 +669,14 @@ def praseInput(line,table_name_dict):
         # concat
         elif function_name.find('concat') != -1:
             table_name_dict[table_name] = concat(table_name_dict.get(parameters.split(',',1)[0]), table_name_dict.get(parameters.split(',',1)[1]))
+        # countgroup
+        elif function_name.find('countgroup') != -1:
+            args = parameters.split(',')
+            table_name_dict[table_name] = countgroup(table_name_dict.get(args[0]), *args[1:])
+        # count
+        elif function_name.find('count')!=-1:
+            table_name_dict[table_name] = count(table_name_dict.get(parameters))
+
     else:
         # Hash, Btree, outputtofile
         function_name, parameters = line.split('(', 1)
