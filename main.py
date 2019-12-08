@@ -36,9 +36,9 @@ def inputfromfile(input_path):
 def outputtofile(_table, output_path):
     try:
         with open(output_path, "w+") as f:
-            #for h in _table.header:
-                #f.write(str(h) + "\t")
-            #f.write("\n")
+            for h in _table.header:
+                f.write(str(h) + "\t")
+            f.write("\n")
             for line in _table.data:
                 for d in line:
                     f.write(str(d) + "\t")
@@ -675,7 +675,10 @@ def praseInput(line,table_name_dict):
 
 if __name__ == "__main__":
     try:
-        with open("inputs.txt", "r") as input_file:
+        inputfilepath = sys.argv[1]
+        if inputfilepath.find('.txt')==-1:
+            inputfilepath = inputfilepath+'.txt'
+        with open(inputfilepath, "r") as input_file:
             opeartions = input_file.readlines()
     except FileNotFoundError:
         print("Error: Path is not valid")
@@ -685,12 +688,20 @@ if __name__ == "__main__":
         if not line.startswith('//'):
             start_time = time.time()
             praseInput(line,table_name_dict)
-            print('Time of %s is:' % line, time.time() - start_time)
-    for table in table_name_dict:
-        directory = ".//output//"
-        if not os.path.isdir(directory):
-            os.mkdir(directory)
-        file_path = os.path.join(directory, table+".txt")
-        outputtofile(table_name_dict.get(table),file_path)
-        print(table,len(table_name_dict.get(table).data))
+            print('Time of %s is:' % line.split('//')[0].replace('\n',''), time.time() - start_time)
+    output_path = 'sy2303_cx650_AllOperations.txt'
+    for table_name, table in table_name_dict.items():
+        try:
+            with open(output_path, "w+") as f:
+                f.write(table_name)
+                for h in table.header:
+                    f.write(str(h) + "\t")
+                    f.write("\n")
+                for line in table.data:
+                    for d in line:
+                        f.write(str(d) + "\t")
+                    f.write("\n")
+        except FileNotFoundError:
+            print("Error: Path is not valid")
+            exit(1)
     
