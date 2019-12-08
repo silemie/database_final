@@ -658,6 +658,10 @@ def praseInput(line,table_name_dict):
         elif function_name.find('sumgroup') != -1:
             args = parameters.split(',')
             table_name_dict[table_name] = sumgroup(table_name_dict.get(args[0]), args[1], *args[2:])
+        # sum
+        elif function_name.find('sum') != -1:
+            args = parameters.split(',')
+            table_name_dict[table_name] = sum(table_name_dict.get(args[0]),*args[1:])
         # join
         elif function_name.find('join') != -1:
             args = parameters.split(',')
