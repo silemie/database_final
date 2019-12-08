@@ -7,3 +7,5 @@ sales2
 *.txt
 *.log
 .DS_Store
+.reprozip-trace/
+.project/

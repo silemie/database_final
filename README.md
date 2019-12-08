@@ -11,9 +11,13 @@ This is a program that implements a miniature relational database with order. Th
 The folllowing tree structure shows four files involving in this program: btree.py, hash.py, table.py, and main.py
 
 ├ README.md
+
 ├ btree.py
+
 ├ hash.py
+
 ├ table.py
+
 ├ main.py
 
 **main.py**  is the main part of database implementation. It includes basic database operations, group operations, data aggregation operations, I/O operations, and index-related operations.
@@ -34,7 +38,32 @@ The folllowing tree structure shows four files involving in this program: btree.
 
 ## Output
 
+The program will output:
 
+1. Time record of each operation
 
+2. Table size results:
 
+   ```sql
+   R 1000
+   R1 900
+   R2 900
+   R3 1
+   R4 50
+   R5 178
+   R6 5
+   S 100000
+   T 3642
+   T1 391
+   T2 391
+   T2prime 391
+   T3 391
+   T4 391
+   Q1 28
+   Q2 28
+   Q3 1
+   Q4 1
+   Q5 29
+   ```
 
+3. Tables in `output` directory

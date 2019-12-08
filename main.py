@@ -205,6 +205,7 @@ def join(_table1,_table2,_table1_name,_table2_name,conditions):
             if c !=condition:
                 result = select_single(result,c.replace('.','_'))
     return result
+
 # ------------------------------------------------------------------
 # Concat
 # ------------------------------------------------------------------
@@ -283,7 +284,6 @@ def count(_table):
     new_table = table()
     new_table.setData(data, header)
     return new_table
-
 
 # ------------------------------------------------------------------
 # Group Average, Sum, Count
@@ -454,6 +454,8 @@ def movsum(_table, col, interval):
 ######################################################################
 # Helper Function
 ######################################################################
+
+# This is a function to check whether is digital or not
 def is_number(s):
     try:
         float(s)
@@ -461,7 +463,10 @@ def is_number(s):
     except ValueError:
         return False
 
-
+# Input paramaters: table, a single condition
+# Return: A table given the single condition
+# This method is the helper function for selection, 
+# to select only one condition each time
 def select_single(_table, single_condition):
     relops = ['!=', '>=', '>', '<=' ,'<' ]
     arithops = ['+', '-', '*', '/']
@@ -575,6 +580,10 @@ def select_single(_table, single_condition):
         new_table.setData(result, _table.header, _table.indices)
         return new_table
 
+# Input paramaters: a table and an index of key col
+# Return: A table with groups given an index
+# This method is the helper function for group
+# This group a table by only one column 
 def group(_table, index):
     tables = []
     groups = _table.findDistinct(index)
@@ -587,7 +596,9 @@ def group(_table, index):
 
     return tables
 
-
+# Input paramaters: a table and some conditions
+# Return: A table with multiple conditions 
+# This method is based on group method and group a table by multi columns
 def groupByMulti(_table, *conditions):
     indices = []
     for condition in conditions:
@@ -604,6 +615,8 @@ def groupByMulti(_table, *conditions):
         tables = new_tables
     return tables
 
+# Input paramaters: a line, a table name
+# This method parses each line to eval them
 def praseInput(line,table_name_dict):
 
     line = line.split('//')[0]
