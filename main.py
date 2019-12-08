@@ -18,7 +18,7 @@
 import os
 import sys, requests, time, math, re
 from table import table
-
+netid = 'sy2303_cx650'
 ######################################################################
 # Input / Output 
 ######################################################################
@@ -35,7 +35,8 @@ def inputfromfile(input_path):
 # This method outputs data given a table and output path
 def outputtofile(_table, output_path):
     try:
-        with open(output_path, "w+") as f:
+        file_path =netid+'_'+output_path
+        with open(file_path, "w+") as f:
             for h in _table.header:
                 f.write(str(h) + "\t")
             f.write("\n")
@@ -689,19 +690,19 @@ if __name__ == "__main__":
             start_time = time.time()
             praseInput(line,table_name_dict)
             print('Time of %s is:' % line.split('//')[0].replace('\n',''), time.time() - start_time)
-    output_path = 'sy2303_cx650_AllOperations.txt'
-    for table_name, table in table_name_dict.items():
-        try:
-            with open(output_path, "w+") as f:
-                f.write(table_name)
+    output_path = netid+'_AllOperations'
+    try:
+        with open(output_path, "w+") as f:
+            for (table_name, table) in table_name_dict.items():
+                f.write('Table '+table_name+'\n')
                 for h in table.header:
                     f.write(str(h) + "\t")
-                    f.write("\n")
+                f.write("\n")
                 for line in table.data:
                     for d in line:
                         f.write(str(d) + "\t")
                     f.write("\n")
-        except FileNotFoundError:
-            print("Error: Path is not valid")
-            exit(1)
+    except FileNotFoundError:
+        print("Error: Path is not valid")
+        exit(1)
     
