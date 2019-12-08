@@ -122,6 +122,9 @@ def project(_table, *cols):
 # ------------------------------------------------------------------
 # Join
 # ------------------------------------------------------------------
+# Input paramaters: two table and their names and a string of conditions
+# Return: A table with rows from table1 and table2 where conditions meet
+# This method joins two table on conditions
 def join(_table1,_table2,_table1_name,_table2_name,conditions):
     relops = ['!=', '>=', '>', '<=' ,'<' ]
     arithops = ['+', '-', '*', '/']
@@ -147,6 +150,7 @@ def join(_table1,_table2,_table1_name,_table2_name,conditions):
         attribute1,attribute2  = attribute1.split(arithop)[0].strip(),attribute2.split(arithop)[0].strip()
     col_name1, col_name2 = attribute1.split('.')[1].strip(), attribute2.split('.')[1].strip()
     col_index1, col_index2 = _table1.findByName(col_name1),_table2.findByName(col_name2)
+    # sort two tables on the column to speed up
     start_row_a, start_row_b, pre, count = 0, 0, None, 0
     if not find:
         relop = '=='
@@ -167,6 +171,10 @@ def join(_table1,_table2,_table1_name,_table2_name,conditions):
         data2 = sorted(_table2.data, key=lambda x: x[col_index2])
     elif relop =='<=':
         non_relop = '>'
+        data1 = sorted(_table1.data, key=lambda x: x[col_index1])
+        data2 = sorted(_table2.data, key=lambda x: x[col_index2])
+    elif relop =='!=':
+        non_relop = '=='
         data1 = sorted(_table1.data, key=lambda x: x[col_index1])
         data2 = sorted(_table2.data, key=lambda x: x[col_index2])
     for data_a in data1:
@@ -458,7 +466,6 @@ def select_single(_table, single_condition):
     arithops = ['+', '-', '*', '/']
     result = []
     single_condition = single_condition.replace('(', '').replace(')', '')
-    #single_condition = ''.join(single_condition.split())
     # inequality
     for relop in relops:
         if single_condition.find(relop) != -1:
@@ -596,7 +603,7 @@ def groupByMulti(_table, *conditions):
         tables = new_tables
     return tables
 
-def paraseInput(line,table_name_dict):
+def praseInput(line,table_name_dict):
 
     line = line.split('//')[0]
     line = ''.join(line.split())
@@ -677,7 +684,7 @@ if __name__ == "__main__":
     for line in opeartions:
         if not line.startswith('//'):
             start_time = time.time()
-            paraseInput(line,table_name_dict)
+            praseInput(line,table_name_dict)
             print('Time of %s is:' % line, time.time() - start_time)
     for table in table_name_dict:
         directory = ".//output//"
