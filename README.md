@@ -1,8 +1,6 @@
-#Database Final Project
+# Database Final Project
 
 Students Name: Chenye Xu, Sile Yang
-
-Students ID: cx650, sy2303
 
 ## Introductoin
 
